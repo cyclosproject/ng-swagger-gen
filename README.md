@@ -68,14 +68,14 @@ project_root
 
 The files are:
 
-- **api/models/model_n_.ts**: One file per model file is generated here. Enumerations
+- **api/models/model*n*.ts**: One file per model file is generated here. Enumerations
   are also correctly generated;
 - **api/models.ts**: An index script which exports all model classes. It is used to make
   it easier for application classes to import models, so they can use
   `import { Model1, Model2 } from 'api/models'` instead of 
   `import { Model1 } from 'api/models/model1'` 
   and `import { Model2 } from 'api/models/model2'`;
-- **api/services/service_n_.ts**: One file per Swagger tag is generated here.
+- **api/services/tag*n*.service.ts**: One file per Swagger tag is generated here;
 - **api/services.ts**: An index script which exports all service classes, similar to
   the analog file for models;
 - **api/api-configuration.ts**: A configuration class that holds the following public static

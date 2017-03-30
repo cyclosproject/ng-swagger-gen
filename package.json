@@ -2,22 +2,22 @@
   "name": "ng-swagger-gen",
   "version": "0.1.0",
   "license": "Apache-2.0",
-
-  "private": false,
-
+  "author": "Cyclos development team",
   "description": "A Swagger 2.0 codegen for Angular 2+",
-
+  "private": false,
+  "keywords": [
+    "angular",
+    "swagger",
+    "codegen"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/luisfpg/ng-swagger-gen.git"
   },
-
   "dependencies": {
     "mustache": "^2.0.0"
   },
-
   "bin": {
     "ng-swagger-gen": "./ng-swagger-gen"
   }
-
 }

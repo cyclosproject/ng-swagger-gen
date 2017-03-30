@@ -1,0 +1,14 @@
+{{{modelComments}}}
+export type {{modelClass}} = {{#modelEnumValues}}
+  "{{enumValue}}"{{^last}} |{{/last}}{{/modelEnumValues}};
+
+export module {{modelClass}} {
+{{#modelEnumValues}}  export const {{enumName}}: {{modelClass}} = "{{enumValue}}";
+{{/modelEnumValues}}
+  export function values(): {{modelClass}}[] {
+    return [
+{{#modelEnumValues}}      {{enumName}}{{^last}}, {{/last}}
+{{/modelEnumValues}}
+    ];
+  }
+}

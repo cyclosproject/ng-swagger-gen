@@ -1,0 +1,15 @@
+import { NgModule } from '@angular/core';
+
+{{#services}}import { {{serviceClass}} } from './services';
+{{/services}}
+
+@NgModule({
+  imports: [],
+  exports: [],
+  declarations: [],
+  providers: [
+{{#services}}   {{serviceClass}}{{^last}},{{/last}}
+{{/services}}
+  ],
+})
+export class ApiModule { }

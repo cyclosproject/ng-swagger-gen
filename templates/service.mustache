@@ -1,0 +1,30 @@
+/* tslint:disable */
+import { Injectable } from '@angular/core';
+import { Http, Response, Headers, URLSearchParams, RequestOptions } from '@angular/http';
+
+import 'rxjs/add/operator/toPromise';
+
+import { ApiConfiguration } from '../api-configuration';
+
+{{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
+{{/serviceDependencies}}
+
+{{{serviceComments}}}
+@Injectable()
+export class {{serviceClass}} {
+  constructor(
+    public http: Http
+  ) {
+  }
+{{#serviceOperations}}
+{{>operation}}
+{{/serviceOperations}}
+}
+
+export module {{serviceClass}} {
+{{#serviceOperations}}{{#operationParamsClass}}  export interface {{operationParamsClass}} {
+{{#operationParameters}}    {{paramName}}{{^paramRequired}}?{{/paramRequired}}: {{paramType}};
+{{/operationParameters}}
+  }
+{{/operationParamsClass}}{{/serviceOperations}}
+}

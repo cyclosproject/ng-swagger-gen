@@ -1,0 +1,23 @@
+{
+  "name": "ng-swagger-gen",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+
+  "private": false,
+
+  "description": "A Swagger 2.0 codegen for Angular 2+",
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luisfpg/ng-swagger-gen.git"
+  },
+
+  "dependencies": {
+    "mustache": "^2.0.0"
+  },
+
+  "bin": {
+    "ng-swagger-gen": "./ng-swagger-gen"
+  }
+
+}

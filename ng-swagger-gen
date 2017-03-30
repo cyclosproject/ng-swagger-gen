@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+'use strict';
+
+var fs = require('fs')
+var path = require('path')
+
+if (process.argv.length < 3) {
+  console.log("Missing required parameter: swagger file location. Usage: \n" + process.argv[1] + " <swagger.json> [output dir]");
+  process.exit(1);
+}
+
+var ngSwaggerGen = require("./ng-swagger-gen.js");
+ngSwaggerGen({
+  swagger: process.argv[2],
+  output: process.argv.length > 3 ? process.argv[3] : 'src/app/api',
+  templates: path.resolve(path.dirname(fs.realpathSync(process.argv[1])), 'templates')
+});

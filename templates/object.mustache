@@ -1,0 +1,9 @@
+{{#modelDependencies}}import { {{modelClass}} } from './{{modelFile}}';
+{{/modelDependencies}}
+
+{{{modelComments}}}
+export class {{modelClass}} {{#modelParent}}extends {{.}} {{/modelParent}}{
+  {{#modelProperties}}
+    {{propertyName}}{{^propertyRequired}}?{{/propertyRequired}}: {{propertyType}};
+  {{/modelProperties}}
+}

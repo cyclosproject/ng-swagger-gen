@@ -143,7 +143,12 @@ function doGenerate(swaggerContent, options) {
 
   // Write the ApiConfiguration
   {
-    generate(templates.apiConfiguration, {}, output + "/api-configuration.ts");
+    var schemes = swagger.schemes || [];
+    var scheme = schemes.length == 0 ? 'http' : schemes[0];
+    var host = (swagger.host || "localhost");
+    var basePath = (swagger.basePath || "/");
+    var rootUrl = scheme + "://" + host + basePath;
+    generate(templates.apiConfiguration, { "rootUrl": rootUrl }, output + "/api-configuration.ts");
   }
 }
 

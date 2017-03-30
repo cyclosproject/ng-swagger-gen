@@ -12,7 +12,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/luisfpg/ng-swagger-gen.git"
+    "url": "git+https://github.com/cyclosproject/ng-swagger-gen.git"
   },
   "dependencies": {
     "mustache": "^2.0.0"

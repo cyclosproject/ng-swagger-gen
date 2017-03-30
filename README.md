@@ -80,8 +80,9 @@ The files are:
   the analog file for models;
 - **api/api-configuration.ts**: A configuration class that holds the following public static
   properties, which can be set directly in your `AppModule` (or some other imported module):
-  - *rootUrl*: A string pointing to the root URL for the API;
-  - *handleError*: A function that takes the error as input, and works a a general error handler
+  - *rootUrl*: A string pointing to the root URL for the API. The default value is read from
+    the Swagger description, from the `schemes`, `host` and `basePath` definitions;
+  - *handleError*: A function that takes the error as input, and works as a general error handler
     for any error returned by the API;
   - *prepareRequestOptions*: A function that takes a `RequestOptions` object before any actual
     request. It can be used, for example, to set authorization headers, additional search parameters,

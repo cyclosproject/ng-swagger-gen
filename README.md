@@ -15,6 +15,8 @@ The design principles are:
 - The generated model should handle correctly inheritance and enumerations;
 - An Angular Module (@NgModule) is generated, which exports all services;
 - One service is generated per Swagger tag;
+- It should be possible to choose a subset of tags from which to generate services;
+- It should generate only the models actually used by the generated service;
 - The configuration of the root URL for the API, as well as an error handler and
   authentication setup of the request (header with API token, basic auth, etc)
   are handled in a generated class called `ApiConfiguration`.
@@ -120,7 +122,8 @@ The supported properties in the JSON file are:
   services. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
 
-The following is an example of a configuration file:
+The following is an example of a configuration file which will choose a few tags to generate, and chose
+not to generate the ApiModule class:
 ```json
 {
   "$schema": "./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json",
@@ -133,6 +136,9 @@ The following is an example of a configuration file:
   "apiModule": false
 }
 ```
+
+This will not only generate only the services for the chosen tags, but models which are not
+referenced by any of the generated services are skipped, preventing the generation of unused classes.
 
 ## Swagger extensions
 The swagger specification doesn't allow referencing an enumeration to be used as an operation parameter.

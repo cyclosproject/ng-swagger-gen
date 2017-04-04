@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 
-{{#services}}import { {{serviceClass}} } from './services';
+{{#services}}import { {{serviceClass}} } from './services/{{serviceFile}}';
 {{/services}}
 
 @NgModule({

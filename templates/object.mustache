@@ -2,7 +2,7 @@
 {{/modelDependencies}}
 
 {{{modelComments}}}
-export class {{modelClass}} {{#modelParent}}extends {{.}} {{/modelParent}}{
+export class {{modelClass}} {{#modelParent}}extends {{modelName}} {{/modelParent}}{
   {{#modelProperties}}
     {{propertyName}}{{^propertyRequired}}?{{/propertyRequired}}: {{propertyType}};
   {{/modelProperties}}

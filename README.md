@@ -140,6 +140,28 @@ not to generate the ApiModule class:
 This will not only generate only the services for the chosen tags, but models which are not
 referenced by any of the generated services are skipped, preventing the generation of unused classes.
 
+## Setting up a node script
+Regardless If your Angular project was generated or is managed by [Angular CLI](https://cli.angular.io/),
+or you have started your project with some other seed (for example, using 
+[webpack](https://webpack.js.org/) directly), you can setup a script to make sure the generated
+API classes are consistent with the swagger descriptor.
+
+To do so, create the `ng-swagger-gen.json` configuration file and add the following in your `package.json`:
+```json
+{
+  ...
+  "scripts": {
+    "ng": "ng",
+    "start": "ng-swagger-gen && ng serve",
+    "build": "ng-swagger-gen && ng build -prod",
+    "lint": "ng lint"
+  },
+  ...
+}
+```
+This way whenever you run `npm run start` or `npm run build`, the API classes will be generated before
+actually serving / building your application.
+
 ## Swagger extensions
 The swagger specification doesn't allow referencing an enumeration to be used as an operation parameter.
 Hence, `ng-swagger-gen` supports the vendor extension `x-type` in operations, whose value could either
@@ -159,8 +181,3 @@ cd petstore
 npm install ng-swagger-gen --save
 node_modules/.bin/ng-swagger-gen http://petstore.swagger.io/v2/swagger.json
 ```
-
-## TODO:
-
-- Integrate the generation in [Angular CLI](https://cli.angular.io/);
-- Support more aspects of the Swagger specification.

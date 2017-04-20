@@ -7,13 +7,15 @@ const path = require('path')
 
 var options = null;
 if (process.argv.length < 3) {
-  // No arguments - check if the ng-swagger-gen.json file exists in the current directory
+  // No arguments - check if the ng-swagger-gen.json file exists
   if (fs.existsSync(CONFIG)) {
     // It exists, read options from it
     options = JSON.parse(fs.readFileSync(CONFIG, "utf8"));
   } else {
     // The config file doesn't exist. Log and exit.
-    console.log("No file " + CONFIG + " in current directory. It means the swagger file location is required. Usage: \n" + process.argv[1] + " <swagger.json> [output dir]");
+    console.log("No file " + CONFIG + " in current directory. It means the "
+      + "swagger file location is required. Usage: \n" + process.argv[1] 
+      + " <swagger.json> [output dir]");
     process.exit(1);
   }
 } else {

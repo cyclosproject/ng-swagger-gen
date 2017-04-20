@@ -1,7 +1,7 @@
 
 {{{operationComments}}}
   {{operationName}}({{#operationParamsClass
-  }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}): Promise<{{operationResultType}}> {
+  }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}): Promise<ApiResponse<{{operationResultType}}>> {
     let options = new RequestOptions({
       method: "{{operationMethod}}",
       url: ApiConfiguration.rootUrl + `{{{operationPathExpression}}}`,
@@ -13,12 +13,17 @@
     ApiConfiguration.prepareRequestOptions(options);
     return this.http.request(options.url, options)
       .toPromise()
-      .then(response => {{#operationIsVoid}}null{{/operationIsVoid
+      .then(response => {
+        if (response.status < 200 || response.status > 299) {
+          throw response;
+        }
+        return new ApiResponse(response, {{#operationIsVoid}}null{{/operationIsVoid
         }}{{#operationIsString}}response.text(){{/operationIsString
         }}{{#operationIsNumber}}response.text() as number{{/operationIsNumber
-        }}{{#operationIsBoolean}}response.text() as Boolean{{/operationIsBoolean
+        }}{{#operationIsBoolean}}response.text() as boolean{{/operationIsBoolean
         }}{{#operationIsEnum}}response.text() as {{operationResultType}}{{/operationIsEnum
         }}{{#operationIsObject}}response.json() as {{operationResultType}}{{/operationIsObject
-        }}{{#operationIsUnknown}}null{{/operationIsUnknown}})
-      .catch(ApiConfiguration.handleError);
+        }}{{#operationIsUnknown}}null{{/operationIsUnknown}});
+      })
+      {{#generalErrorHandler}}.catch(ApiConfiguration.handleError){{/generalErrorHandler}};
   }

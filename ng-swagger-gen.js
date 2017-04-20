@@ -26,7 +26,8 @@ function ngSwaggerGen(options) {
       const contentType = res.headers['content-type'];
 
       if (statusCode !== 200) {
-        console.log("Server responded with status code " + statusCode + " the request to " + options.swagger);
+        console.log("Server responded with status code " + statusCode 
+          + " the request to " + options.swagger);
         process.exit(1);
       }
 
@@ -38,7 +39,8 @@ function ngSwaggerGen(options) {
         doGenerate(data, options);
       });
     }).on('error', (err) => {
-        console.log("Error reading swagger JSON URL " + options.swagger + ": " + err.message);
+        console.log("Error reading swagger JSON URL " + options.swagger 
+          + ": " + err.message);
         process.exit(1);
     });
   } else {
@@ -49,7 +51,8 @@ function ngSwaggerGen(options) {
     }
     fs.readFile(options.swagger, "UTF-8", (err, data) => {
       if (err) {
-        console.log("Error reading swagger JSON file " + options.swagger + ": " + err.message);
+        console.log("Error reading swagger JSON file " + options.swagger 
+          + ": " + err.message);
         process.exit(1);
       } else {
         // Proceed with the generation
@@ -76,7 +79,8 @@ function doGenerate(swaggerContent, options) {
     process.exit(1);
   }
   if (swagger.swagger !== '2.0') {
-    console.log("Invalid swagger specification. Must be a 2.0. Currently " + swagger.swagger);
+    console.log("Invalid swagger specification. Must be a 2.0. Currently " 
+      + swagger.swagger);
     process.exit(1);
   }
   swagger.paths = swagger.paths || {};
@@ -84,12 +88,14 @@ function doGenerate(swaggerContent, options) {
   var models = processModels(swagger);
   var services = processServices(swagger, models);
 
-  // Apply the tag filter. If includeTags is null, uses all services, but still removes unused models
+  // Apply the tag filter. If includeTags is null, uses all services, 
+  // but still removes unused models
   var includeTags = options.includeTags;
   if (typeof includeTags == 'string') {
     includeTags = includeTags.split(",");
   }
-  applyTagFilter(models, services, includeTags, options.ignoreUnusedModels !== false);
+  applyTagFilter(models, services, includeTags, 
+    options.ignoreUnusedModels !== false);
 
   // Read the templates
   var templates = {}
@@ -108,7 +114,7 @@ function doGenerate(swaggerContent, options) {
   mkdirs(modelsOutput);
   mkdirs(servicesOutput);
 
-  var removeStaleFiles = options.removeStaleFiles === true;
+  var removeStaleFiles = options.removeStaleFiles !== false;
 
   // Utility function to render a template and write it to a file
   var generate = function (template, model, file) {
@@ -122,7 +128,8 @@ function doGenerate(swaggerContent, options) {
   for (var modelName in models) {
     var model = models[modelName];
     modelsArray.push(model);
-    generate(templates.model, model, modelsOutput + "/" + model.modelFile + ".ts");
+    generate(templates.model, model, 
+      modelsOutput + "/" + model.modelFile + ".ts");
   }
   if (modelsArray.length > 0) {
     modelsArray[modelsArray.length - 1].last = true;
@@ -157,8 +164,10 @@ function doGenerate(swaggerContent, options) {
   var servicesArray = [];
   for (var serviceName in services) {
     var service = services[serviceName];
+    service.generalErrorHandler = options.errorHandler !== false;
     servicesArray.push(service);
-    generate(templates.service, service, servicesOutput + "/" + service.serviceFile + ".ts");
+    generate(templates.service, service, 
+      servicesOutput + "/" + service.serviceFile + ".ts");
   }
   if (servicesArray.length > 0) {
     servicesArray[servicesArray.length - 1].last = true;
@@ -184,7 +193,8 @@ function doGenerate(swaggerContent, options) {
   // Write the service index
   var serviceIndexFile = output + "/services.ts";
   if (options.serviceIndex !== false) {
-    generate(templates.services, { "services": servicesArray }, serviceIndexFile);
+    generate(templates.services, { "services": servicesArray }, 
+      serviceIndexFile);
   } else if (removeStaleFiles) {
     rmIfExists(serviceIndexFile);
   }
@@ -192,7 +202,8 @@ function doGenerate(swaggerContent, options) {
   // Write the api module
   var apiModuleFile = output + "/api.module.ts";
   if (options.apiModule !== false) {
-    generate(templates.apiModule, { "services": servicesArray }, apiModuleFile);
+    generate(templates.apiModule, { "services": servicesArray }, 
+      apiModuleFile);
   } else if (removeStaleFiles) {
     rmIfExists(apiModuleFile);
   }
@@ -204,13 +215,23 @@ function doGenerate(swaggerContent, options) {
     var host = (swagger.host || "localhost");
     var basePath = (swagger.basePath || "/");
     var rootUrl = scheme + "://" + host + basePath;
-    generate(templates.apiConfiguration, { "rootUrl": rootUrl }, output + "/api-configuration.ts");
+    var context = {
+      "rootUrl": rootUrl,
+      "generalErrorHandler": options.errorHandler !== false
+    };
+    generate(templates.apiConfiguration, context, 
+      output + "/api-configuration.ts");
+  }
+
+  // Write the ApiResponse
+  {
+    generate(templates.apiResponse, {}, output + "/api-response.ts");
   }
 }
 
 /**
  * Applies a filter over the given services, keeping only the specific tags.
- * Also optionally removes any unused models, even if includeTags is null (meaning all).
+ * Also optionally removes any unused models, even if includeTags is null (all).
  */
 function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
   var usedModels = new Set();
@@ -218,7 +239,8 @@ function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
     var include = !includeTags || includeTags.indexOf(serviceName) >= 0;
     if (!include) {
       // This service is skipped - remove it
-      console.log("Ignoring service " + serviceName + " because it was not included");
+      console.log("Ignoring service " + serviceName 
+        + " because it was not included");
       delete services[serviceName];
     } else if (ignoreUnusedModels) {
       // Collect the models used by this service
@@ -230,13 +252,15 @@ function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
   if (ignoreUnusedModels) {
     // Collect the model dependencies of models, so unused can be removed
     var allDependencies = new Set();
-    usedModels.forEach(dep => collectDependencies(allDependencies, dep, models));
+    usedModels.forEach(
+      dep => collectDependencies(allDependencies, dep, models));
 
     // Remove all models that are unused
     for (var modelName in models) {
       if (!allDependencies.has(modelName)) {
         // This model is not used - remove it
-        console.log("Ignoring model " + modelName + " because it was not used by any service");
+        console.log("Ignoring model " + modelName 
+          + " because it was not used by any service");
         delete models[modelName];
       }
     }
@@ -244,7 +268,7 @@ function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
 }
 
 /**
- * Collects on the given dependencies set all dependencies of the given model name
+ * Collects on the given dependencies set all dependencies of the given model
  */
 function collectDependencies(dependencies, model, models) {
   if (!model || dependencies.has(model.modelName)) {
@@ -551,7 +575,7 @@ function propertyType(property) {
     case "number":
       return "number";
     case "boolean":
-      return "Boolean";
+      return "boolean";
     case "object":
       var def = "{";
       var first = true;
@@ -749,7 +773,8 @@ function processServices(swagger, models) {
       var docString = def.description || "";
       for (var i = 0; i < operationParameters.length; i++) {
         var param = operationParameters[i];
-        docString += "\n@param " + param.paramName + " - " + param.paramDescription;
+        docString += "\n@param " + param.paramName + " - " 
+          + param.paramDescription;
       }
       var operation = {
         "operationName": id,

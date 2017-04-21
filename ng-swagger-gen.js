@@ -562,7 +562,8 @@ function propertyType(property) {
     var type = (property["x-type"] || "").toString().replace("List<", "Array<");
     var pos = type.indexOf("Array<");
     if (pos >= 0) {
-      type = type.substr("Array<".length, type.length - 1) + "[]";
+      type = type.substr("Array<".length, type.length);
+      type = type.substr(0, type.length -1) + "[]";
     }
     return type.length == 0 ? 'void' : type;
   }

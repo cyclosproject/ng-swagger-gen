@@ -19,8 +19,8 @@
         }
         return new ApiResponse(response, {{#operationIsVoid}}null{{/operationIsVoid
         }}{{#operationIsString}}response.text(){{/operationIsString
-        }}{{#operationIsNumber}}response.text() as number{{/operationIsNumber
-        }}{{#operationIsBoolean}}response.text() as boolean{{/operationIsBoolean
+        }}{{#operationIsNumber}}parseFloat(response.text()){{/operationIsNumber
+        }}{{#operationIsBoolean}}response.text() == 'true'{{/operationIsBoolean
         }}{{#operationIsEnum}}response.text() as {{operationResultType}}{{/operationIsEnum
         }}{{#operationIsObject}}response.json() as {{operationResultType}}{{/operationIsObject
         }}{{#operationIsUnknown}}null{{/operationIsUnknown}});

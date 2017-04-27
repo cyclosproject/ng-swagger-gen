@@ -40,7 +40,7 @@ Here are a few notes:
 In your project, run:
 ```bash
 cd <your_angular2+_app_dir>
-npm install ng-swagger-gen --save
+npm install ng-swagger-gen --save-dev
 node_modules/.bin/ng-swagger-gen <path_to_swagger_json> [output_dir]
 ```
 Where:

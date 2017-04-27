@@ -1,10 +1,14 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
-### 0.3.1 (2017-04-05)
+### 0.3.2 (2017-04-27)
+- Don't send empty header / query parameters for null arguments
+- Fixed generation for number and boolean result types
+
+### 0.3.1 (2017-04-21)
 - Fixed handling of arrays using x-type vendor extensions (thanks to @giacomozr)
 
-### 0.3.0 (2017-04-05)
+### 0.3.0 (2017-04-19)
 - Made all services return the ApiResponse, which contains both the 
   response and result data
 - Bug fixes

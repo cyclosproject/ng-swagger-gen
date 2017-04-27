@@ -1,5 +1,5 @@
-    {{#paramIsQuery}}{{#paramIsArray}}(params.{{paramName}} || []).forEach((val, index) => options.search.append("{{paramName}}", val == null ? "" : val.toString()));{{/paramIsArray
-}}{{^paramIsArray}}if (params.{{paramName}} != null) options.search.set("{{paramName}}", params.{{paramName}}.toString());{{/paramIsArray}}{{/paramIsQuery
-}}{{#paramIsHeader}}{{#paramIsArray}}(params.{{paramName}} || []).forEach((val, index) => options.headers.append("{{paramName}}", val == null ? "" : val.toString()));{{/paramIsArray
-}}{{^paramIsArray}}if (params.{{paramName}} != null) options.headers.set("{{paramName}}", params.{{paramName}}.toString());{{/paramIsArray}}{{/paramIsHeader
-}}{{#paramIsBody}}options.body = params.{{paramName}};{{/paramIsBody}}
+    {{#paramIsQuery}}{{#paramIsArray}}({{paramVar}} || []).forEach((val, index) => {if (val != null) options.search.append("{{paramName}}", val.toString())});{{/paramIsArray
+}}{{^paramIsArray}}if ({{paramVar}} != null) options.search.set("{{paramName}}", {{paramVar}}.toString());{{/paramIsArray}}{{/paramIsQuery
+}}{{#paramIsHeader}}{{#paramIsArray}}({{paramVar}} || []).forEach((val, index) => {if (val != null) options.headers.append("{{paramName}}", val.toString())});{{/paramIsArray
+}}{{^paramIsArray}}if ({{paramVar}} != null) options.headers.set("{{paramName}}", {{paramVar}}.toString());{{/paramIsArray}}{{/paramIsHeader
+}}{{#paramIsBody}}options.body = {{paramVar}};{{/paramIsBody}}

@@ -1,7 +1,12 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
-### 0.3.2 (2017-04-27)
+### 0.4.0 (2017-04-27)
+- Allow customizing the minimum number of parameters to generate a wrapper class
+- Don't send empty header / query parameters for null array elements
+- Minor cosmetic changes
+
+### 0.3.2 (2017-04-26)
 - Don't send empty header / query parameters for null arguments
 - Fixed generation for number and boolean result types
 

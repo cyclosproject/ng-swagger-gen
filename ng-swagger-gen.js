@@ -26,7 +26,7 @@ function ngSwaggerGen(options) {
       const contentType = res.headers['content-type'];
 
       if (statusCode !== 200) {
-        console.log("Server responded with status code " + statusCode 
+        console.log("Server responded with status code " + statusCode
           + " the request to " + options.swagger);
         process.exit(1);
       }
@@ -39,9 +39,9 @@ function ngSwaggerGen(options) {
         doGenerate(data, options);
       });
     }).on('error', (err) => {
-        console.log("Error reading swagger JSON URL " + options.swagger 
-          + ": " + err.message);
-        process.exit(1);
+      console.log("Error reading swagger JSON URL " + options.swagger
+        + ": " + err.message);
+      process.exit(1);
     });
   } else {
     // The swagger definition is a local file
@@ -51,7 +51,7 @@ function ngSwaggerGen(options) {
     }
     fs.readFile(options.swagger, "UTF-8", (err, data) => {
       if (err) {
-        console.log("Error reading swagger JSON file " + options.swagger 
+        console.log("Error reading swagger JSON file " + options.swagger
           + ": " + err.message);
         process.exit(1);
       } else {
@@ -79,14 +79,14 @@ function doGenerate(swaggerContent, options) {
     process.exit(1);
   }
   if (swagger.swagger !== '2.0') {
-    console.log("Invalid swagger specification. Must be a 2.0. Currently " 
+    console.log("Invalid swagger specification. Must be a 2.0. Currently "
       + swagger.swagger);
     process.exit(1);
   }
   swagger.paths = swagger.paths || {};
   swagger.models = swagger.models || [];
-  var models = processModels(swagger);
-  var services = processServices(swagger, models);
+  var models = processModels(swagger, options);
+  var services = processServices(swagger, models, options);
 
   // Apply the tag filter. If includeTags is null, uses all services, 
   // but still removes unused models
@@ -94,7 +94,7 @@ function doGenerate(swaggerContent, options) {
   if (typeof includeTags == 'string') {
     includeTags = includeTags.split(",");
   }
-  applyTagFilter(models, services, includeTags, 
+  applyTagFilter(models, services, includeTags,
     options.ignoreUnusedModels !== false);
 
   // Read the templates
@@ -128,11 +128,11 @@ function doGenerate(swaggerContent, options) {
   for (var modelName in models) {
     var model = models[modelName];
     modelsArray.push(model);
-    generate(templates.model, model, 
+    generate(templates.model, model,
       modelsOutput + "/" + model.modelFile + ".ts");
   }
   if (modelsArray.length > 0) {
-    modelsArray[modelsArray.length - 1].last = true;
+    modelsArray[modelsArray.length - 1].modelIsLast = true;
   }
   if (removeStaleFiles) {
     var modelFiles = fs.readdirSync(modelsOutput);
@@ -166,11 +166,11 @@ function doGenerate(swaggerContent, options) {
     var service = services[serviceName];
     service.generalErrorHandler = options.errorHandler !== false;
     servicesArray.push(service);
-    generate(templates.service, service, 
+    generate(templates.service, service,
       servicesOutput + "/" + service.serviceFile + ".ts");
   }
   if (servicesArray.length > 0) {
-    servicesArray[servicesArray.length - 1].last = true;
+    servicesArray[servicesArray.length - 1].serviceIsLast = true;
   }
   if (removeStaleFiles) {
     var serviceFiles = fs.readdirSync(servicesOutput);
@@ -193,7 +193,7 @@ function doGenerate(swaggerContent, options) {
   // Write the service index
   var serviceIndexFile = output + "/services.ts";
   if (options.serviceIndex !== false) {
-    generate(templates.services, { "services": servicesArray }, 
+    generate(templates.services, { "services": servicesArray },
       serviceIndexFile);
   } else if (removeStaleFiles) {
     rmIfExists(serviceIndexFile);
@@ -202,7 +202,7 @@ function doGenerate(swaggerContent, options) {
   // Write the api module
   var apiModuleFile = output + "/api.module.ts";
   if (options.apiModule !== false) {
-    generate(templates.apiModule, { "services": servicesArray }, 
+    generate(templates.apiModule, { "services": servicesArray },
       apiModuleFile);
   } else if (removeStaleFiles) {
     rmIfExists(apiModuleFile);
@@ -219,7 +219,7 @@ function doGenerate(swaggerContent, options) {
       "rootUrl": rootUrl,
       "generalErrorHandler": options.errorHandler !== false
     };
-    generate(templates.apiConfiguration, context, 
+    generate(templates.apiConfiguration, context,
       output + "/api-configuration.ts");
   }
 
@@ -239,7 +239,7 @@ function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
     var include = !includeTags || includeTags.indexOf(serviceName) >= 0;
     if (!include) {
       // This service is skipped - remove it
-      console.log("Ignoring service " + serviceName 
+      console.log("Ignoring service " + serviceName
         + " because it was not included");
       delete services[serviceName];
     } else if (ignoreUnusedModels) {
@@ -259,7 +259,7 @@ function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
     for (var modelName in models) {
       if (!allDependencies.has(modelName)) {
         // This model is not used - remove it
-        console.log("Ignoring model " + modelName 
+        console.log("Ignoring model " + modelName
           + " because it was not used by any service");
         delete models[modelName];
       }
@@ -286,18 +286,18 @@ function collectDependencies(dependencies, model, models) {
  * Thanks to https://github.com/grj1046/node-mkdirs/blob/master/index.js
  */
 function mkdirs(folderPath, mode) {
-    var folders = [];
-    var tmpPath = path.normalize(folderPath);
-    var exists = fs.existsSync(tmpPath);
-    while (!exists) {
-        folders.push(tmpPath);
-        tmpPath = path.join(tmpPath, '..');
-        exists = fs.existsSync(tmpPath);
-    }
+  var folders = [];
+  var tmpPath = path.normalize(folderPath);
+  var exists = fs.existsSync(tmpPath);
+  while (!exists) {
+    folders.push(tmpPath);
+    tmpPath = path.join(tmpPath, '..');
+    exists = fs.existsSync(tmpPath);
+  }
 
-    for (var i = folders.length - 1; i >= 0; i--) {
-        fs.mkdirSync(folders[i], mode);
-    }
+  for (var i = folders.length - 1; i >= 0; i--) {
+    fs.mkdirSync(folders[i], mode);
+  }
 }
 
 /**
@@ -414,7 +414,7 @@ DependenciesResolver.prototype.get = function () {
  * Process each model, returning an object keyed by model name, whose values
  * are simplified descriptors for models.
  */
-function processModels(swagger) {
+function processModels(swagger, options) {
   var models = {};
   for (var name in swagger.definitions) {
     var model = swagger.definitions[name];
@@ -440,7 +440,7 @@ function processModels(swagger) {
           var enumDescriptor = {
             "enumName": toEnumName(enumValue),
             "enumValue": enumValue,
-            "last": i === enumValues.length - 1
+            "enumIsLast": i === enumValues.length - 1
           }
           enumValues[i] = enumDescriptor;
         }
@@ -475,7 +475,7 @@ function processModels(swagger) {
       });
       if (descriptor.modelProperties.length > 0) {
         descriptor.modelProperties[descriptor.modelProperties.length - 1]
-          .last = true;
+          .propertyIsLast = true;
       }
     }
 
@@ -563,7 +563,7 @@ function propertyType(property) {
     var pos = type.indexOf("Array<");
     if (pos >= 0) {
       type = type.substr("Array<".length, type.length);
-      type = type.substr(0, type.length -1) + "[]";
+      type = type.substr(0, type.length - 1) + "[]";
     }
     return type.length == 0 ? 'void' : type;
   }
@@ -684,17 +684,20 @@ function processResponses(def, path, models) {
 /**
  * Returns a path expression to be evaluated, for example:
  * "/a/{var1}/b/{var2}/" returns "/a/${params.var1}/b/${params.var2}"
+ * if there is a parameters class, or "/a/${var1}/b/${var2}" otherwise.
  */
-function toPathExpression(path) {
-  return (path || "").replace("{", "${params.");
+function toPathExpression(paramsClass, path) {
+  var repl = paramsClass == null ? "${" : "${params.";
+  return (path || "").replace("{", repl);
 }
 
 /**
  * Process API paths, returning an object with descriptors keyed by tag name.
  * It is required that operations define a single tag, or they are ignored.
  */
-function processServices(swagger, models) {
+function processServices(swagger, models, options) {
   var services = {};
+  var minParamsForContainer = options.minParamsForContainer || 1;
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
     for (var method in (path || {})) {
@@ -730,6 +733,9 @@ function processServices(swagger, models) {
           + " because it has no id");
         continue;
       }
+      var paramsClass = def.parameters.length < minParamsForContainer
+        ? null : id.charAt(0).toUpperCase() + id.substr(1) + "Params";
+
       var operationParameters = [];
       for (var p = 0; p < def.parameters.length; p++) {
         var param = def.parameters[p];
@@ -745,6 +751,7 @@ function processServices(swagger, models) {
         var paramDescriptor = {
           "paramName": param.name,
           "paramIn": param.in,
+          "paramVar": (paramsClass == null ? "" : "params.") + param.name,
           "paramRequired": param.required === true || param.in === 'path',
           "paramIsQuery": param.in === 'query',
           "paramIsPath": param.in === 'path',
@@ -765,16 +772,14 @@ function processServices(swagger, models) {
           ? -1 : a.paramName < b.paramName ? 1 : 0;
       });
       if (operationParameters.length > 0) {
-        operationParameters[operationParameters.length - 1].last = true;
+        operationParameters[operationParameters.length - 1].paramIsLast = true;
       }
-      var paramsClass = operationParameters.length == 0
-        ? null : id.charAt(0).toUpperCase() + id.substr(1) + "Params";
       var operationResponses = processResponses(def, path, models);
       var resultType = operationResponses.resultType;
       var docString = def.description || "";
       for (var i = 0; i < operationParameters.length; i++) {
         var param = operationParameters[i];
-        docString += "\n@param " + param.paramName + " - " 
+        docString += "\n@param " + param.paramName + " - "
           + param.paramDescription;
       }
       var operation = {
@@ -782,7 +787,7 @@ function processServices(swagger, models) {
         "operationParamsClass": paramsClass,
         "operationMethod": method.toLocaleLowerCase(),
         "operationPath": url,
-        "operationPathExpression": toPathExpression(url),
+        "operationPathExpression": toPathExpression(paramsClass, url),
         "operationComments": toComments(docString, 1),
         "operationResultType": resultType,
         "operationParameters": operationParameters,

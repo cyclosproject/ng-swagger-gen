@@ -1,7 +1,11 @@
 
 {{{operationComments}}}
   {{operationName}}({{#operationParamsClass
-  }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}): Promise<ApiResponse<{{operationResultType}}>> {
+  }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}{{^operationParamsClass
+  }}{{#operationParameters}}{{paramName}}{{^paramRequired}}?{{/paramRequired}}: {{paramType
+  }}{{^paramIsLast}},
+    {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
+    }}): Promise<ApiResponse<{{operationResultType}}>> {
     let options = new RequestOptions({
       method: "{{operationMethod}}",
       url: ApiConfiguration.rootUrl + `{{{operationPathExpression}}}`,
@@ -24,6 +28,6 @@
         }}{{#operationIsEnum}}response.text() as {{operationResultType}}{{/operationIsEnum
         }}{{#operationIsObject}}response.json() as {{operationResultType}}{{/operationIsObject
         }}{{#operationIsUnknown}}null{{/operationIsUnknown}});
-      })
-      {{#generalErrorHandler}}.catch(ApiConfiguration.handleError){{/generalErrorHandler}};
+      }){{#generalErrorHandler}}
+      .catch(ApiConfiguration.handleError){{/generalErrorHandler}};
   }

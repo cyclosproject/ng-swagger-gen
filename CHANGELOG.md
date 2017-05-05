@@ -1,6 +1,9 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.4.2 (2017-05-05)
+- New fix for https://github.com/cyclosproject/ng-swagger-gen/issues/2
+
 ### 0.4.1 (2017-05-05)
 - Fixed https://github.com/cyclosproject/ng-swagger-gen/issues/2
 

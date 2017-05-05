@@ -27,6 +27,7 @@
         }}{{#operationIsBoolean}}response.text() == 'true'{{/operationIsBoolean
         }}{{#operationIsEnum}}response.text() as {{operationResultType}}{{/operationIsEnum
         }}{{#operationIsObject}}response.json() as {{operationResultType}}{{/operationIsObject
+        }}{{#operationIsArray}}response.json() as {{operationResultType}}{{/operationIsArray
         }}{{#operationIsUnknown}}null{{/operationIsUnknown}});
       }){{#generalErrorHandler}}
       .catch(ApiConfiguration.handleError){{/generalErrorHandler}};

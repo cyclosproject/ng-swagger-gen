@@ -797,13 +797,14 @@ function processServices(swagger, models, options) {
       operation.operationIsString = resultType === 'string';
       operation.operationIsNumber = resultType === 'number';
       operation.operationIsBoolean = resultType === 'boolean';
+      operation.operationIsArray = resultType.indexOf('[]') >= 0;
       var modelResult = models[removeBrackets(resultType)];
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsUnknown = !(operation.operationIsVoid
         || operation.operationIsString || operation.operationIsNumber
         || operation.operationIsBoolean || operation.operationIsEnum
-        || operation.operationIsObject);
+        || operation.operationIsObject || operation.operationIsArray);
       descriptor.serviceOperations.push(operation);
     }
     services[tag] = descriptor;

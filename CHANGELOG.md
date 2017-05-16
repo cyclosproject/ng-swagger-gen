@@ -1,11 +1,28 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.5.0 (2017-05-16)
+- Changed the default value for `minParamsForContainer` to 2. This way,
+  operations that take a single argument won't have a parameter class.
+  If the old behavior is desired, just set `minParamsForContainer` to 1 in
+  `ng-swagger-gen.json`.
+- Made generation more robust regarding in several ways:
+  - If an operation doesn't define an id, one is generated 
+    (using the HTTP method + path)
+  - If an operation has no tag, a default tag is assumed 
+    (configurable, defaults to 'Api')
+  - If an operation defines multiple tags, only the first one is used
+  - If a model is named `ApiResponse` the generation won't conflict with the
+    generated `ApiResponse`.
+- Don't fail if an operation has single / multiple tags, or no id
+  https://github.com/cyclosproject/ng-swagger-gen/issues/3
+
 ### 0.4.2 (2017-05-05)
 - New fix for https://github.com/cyclosproject/ng-swagger-gen/issues/2
 
 ### 0.4.1 (2017-05-05)
-- Fixed https://github.com/cyclosproject/ng-swagger-gen/issues/2
+- Fixed generation of operations returning arrays of primitive types
+  https://github.com/cyclosproject/ng-swagger-gen/issues/2
 
 ### 0.4.0 (2017-05-02)
 - Allow customizing the minimum number of parameters to generate a wrapper class

@@ -5,7 +5,7 @@ import { Http, Response, Headers, URLSearchParams, RequestOptions } from '@angul
 import 'rxjs/add/operator/toPromise';
 
 import { ApiConfiguration } from '../api-configuration';
-import { ApiResponse } from '../api-response';
+import { ApiResponse as _ApiResponse_ } from '../api-response';
 
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}

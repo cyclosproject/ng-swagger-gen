@@ -5,7 +5,7 @@
   }}{{#operationParameters}}{{paramName}}{{^paramRequired}}?{{/paramRequired}}: {{paramType
   }}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
-    }}): Promise<ApiResponse<{{operationResultType}}>> {
+    }}): Promise<_ApiResponse_<{{operationResultType}}>> {
     let options = new RequestOptions({
       method: "{{operationMethod}}",
       url: ApiConfiguration.rootUrl + `{{{operationPathExpression}}}`,
@@ -21,7 +21,7 @@
         if (response.status < 200 || response.status > 299) {
           throw response;
         }
-        return new ApiResponse(response, {{#operationIsVoid}}null{{/operationIsVoid
+        return new _ApiResponse_(response, {{#operationIsVoid}}null{{/operationIsVoid
         }}{{#operationIsString}}response.text(){{/operationIsString
         }}{{#operationIsNumber}}parseFloat(response.text()){{/operationIsNumber
         }}{{#operationIsBoolean}}response.text() == 'true'{{/operationIsBoolean

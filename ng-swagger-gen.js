@@ -12,7 +12,7 @@ const Mustache = require('mustache');
  */
 function ngSwaggerGen(options) {
   if (typeof options.swagger != 'string') {
-    console.log("Swagger file not specified in the 'swagger' option");
+    console.error("Swagger file not specified in the 'swagger' option");
     process.exit(1);
   }
 
@@ -26,7 +26,7 @@ function ngSwaggerGen(options) {
       const contentType = res.headers['content-type'];
 
       if (statusCode !== 200) {
-        console.log("Server responded with status code " + statusCode
+        console.error("Server responded with status code " + statusCode
           + " the request to " + options.swagger);
         process.exit(1);
       }
@@ -39,19 +39,19 @@ function ngSwaggerGen(options) {
         doGenerate(data, options);
       });
     }).on('error', (err) => {
-      console.log("Error reading swagger JSON URL " + options.swagger
+      console.error("Error reading swagger JSON URL " + options.swagger
         + ": " + err.message);
       process.exit(1);
     });
   } else {
     // The swagger definition is a local file
     if (!fs.existsSync(options.swagger)) {
-      console.log("Swagger definition file doesn't exist: " + options.swagger);
+      console.error("Swagger definition file doesn't exist: " + options.swagger);
       process.exit(1);
     }
     fs.readFile(options.swagger, "UTF-8", (err, data) => {
       if (err) {
-        console.log("Error reading swagger JSON file " + options.swagger
+        console.error("Error reading swagger JSON file " + options.swagger
           + ": " + err.message);
         process.exit(1);
       } else {
@@ -75,11 +75,11 @@ function doGenerate(swaggerContent, options) {
 
   var swagger = JSON.parse(swaggerContent);
   if (typeof swagger != 'object') {
-    console.log("Invalid swagger content");
+    console.error("Invalid swagger content");
     process.exit(1);
   }
   if (swagger.swagger !== '2.0') {
-    console.log("Invalid swagger specification. Must be a 2.0. Currently "
+    console.error("Invalid swagger specification. Must be a 2.0. Currently "
       + swagger.swagger);
     process.exit(1);
   }
@@ -94,8 +94,7 @@ function doGenerate(swaggerContent, options) {
   if (typeof includeTags == 'string') {
     includeTags = includeTags.split(",");
   }
-  applyTagFilter(models, services, includeTags,
-    options.ignoreUnusedModels !== false);
+  applyTagFilter(models, services, includeTags, options);
 
   // Read the templates
   var templates = {}
@@ -120,7 +119,7 @@ function doGenerate(swaggerContent, options) {
   var generate = function (template, model, file) {
     var code = Mustache.render(template, model, templates);
     fs.writeFileSync(file, code, "UTF-8");
-    console.log("Wrote " + file);
+    console.info("Wrote " + file);
   };
 
   // Write the models
@@ -233,13 +232,22 @@ function doGenerate(swaggerContent, options) {
  * Applies a filter over the given services, keeping only the specific tags.
  * Also optionally removes any unused models, even if includeTags is null (all).
  */
-function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
+function applyTagFilter(models, services, includeTags, options) {
+  var ignoreUnusedModels = options.ignoreUnusedModels !== false;
+  // Normalize the tag names
+  var included = null;
+  if (includeTags && includeTags.length > 0) {
+    included = [];
+    for (var i = 0; i < includeTags.length; i++) {
+        included.push(tagName(includeTags[i], options));
+    }
+  }
   var usedModels = new Set();
   for (var serviceName in services) {
-    var include = !includeTags || includeTags.indexOf(serviceName) >= 0;
+    var include = !included || included.indexOf(serviceName) >= 0;
     if (!include) {
       // This service is skipped - remove it
-      console.log("Ignoring service " + serviceName
+      console.info("Ignoring service " + serviceName
         + " because it was not included");
       delete services[serviceName];
     } else if (ignoreUnusedModels) {
@@ -259,7 +267,7 @@ function applyTagFilter(models, services, includeTags, ignoreUnusedModels) {
     for (var modelName in models) {
       if (!allDependencies.has(modelName)) {
         // This model is not used - remove it
-        console.log("Ignoring model " + modelName
+        console.info("Ignoring model " + modelName
           + " because it was not used by any service");
         delete models[modelName];
       }
@@ -305,7 +313,7 @@ function mkdirs(folderPath, mode) {
  */
 function rmIfExists(file) {
   if (fs.existsSync(file)) {
-    console.log("Removing stale file " + file);
+    console.info("Removing stale file " + file);
     fs.unlinkSync(file);
   }
 }
@@ -432,7 +440,7 @@ function processModels(swagger, options) {
     } else if (model.type === 'string') {
       enumValues = model.enum || [];
       if (enumValues.length == 0) {
-        console.log("Enum " + name + " has no possible values");
+        console.error("Enum " + name + " has no possible values");
         process.exit(1);
       } else {
         for (var i = 0; i < enumValues.length; i++) {
@@ -446,7 +454,7 @@ function processModels(swagger, options) {
         }
       }
     } else {
-      console.log("Unhandled model type for " + name);
+      console.error("Unhandled model type for " + name);
       process.exit(1);
     }
     var descriptor = {
@@ -542,8 +550,12 @@ function processModels(swagger, options) {
 /**
  * Removes an array designation from the given type.
  * For example, "a[]" returns "a", while "b" returns "b".
+ * A special case is for inline objects. In this case, the result is "object".
  */
 function removeBrackets(type) {
+  if (typeof type == "object") {
+    return "object";
+  }
   var pos = (type || "").indexOf("[");
   return pos >= 0 ? type.substr(0, pos) : type;
 }
@@ -640,7 +652,7 @@ function processProperties(swagger, properties, requiredProperties) {
  */
 function resolveRef(swagger, ref) {
   if (ref.indexOf("#/") != 0) {
-    console.log("Resolved references must start with #/. Current: " + ref);
+    console.error("Resolved references must start with #/. Current: " + ref);
     process.exit(1);
   }
   var parts = ref.substr(2).split("/");
@@ -692,12 +704,45 @@ function toPathExpression(paramsClass, path) {
 }
 
 /**
+ * Generates an operation id given a method an URL
+ */
+function toOperationId(method, url) {
+  var temp = method + url;
+  var result = "";
+  var wasSep = false;
+  for (var i = 0; i < temp.length; i++) {
+    var c = temp.charAt(i)
+    if (/[a-z|A-Z|0-9]/.test(c)) {
+      if (wasSep) {
+        c = c.toUpperCase();
+        wasSep = false;
+      }
+      result += c;
+    } else {
+      wasSep = true;
+    }
+  }
+  return result;
+}
+
+/**
+ * Normalizes the tag name. Actually, capitalizes the given name.
+ * If the given tag is null, returns the default from options
+ */
+function tagName(tag, options) {
+  if (tag == null || tag === '') {
+    tag = options.defaultTag || "Api";
+  }
+  return tag.charAt(0).toUpperCase() + (tag.length == 1 ? "" : tag.substr(1));
+}
+
+/**
  * Process API paths, returning an object with descriptors keyed by tag name.
  * It is required that operations define a single tag, or they are ignored.
  */
 function processServices(swagger, models, options) {
   var services = {};
-  var minParamsForContainer = options.minParamsForContainer || 1;
+  var minParamsForContainer = options.minParamsForContainer || 2;
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
     for (var method in (path || {})) {
@@ -705,17 +750,15 @@ function processServices(swagger, models, options) {
       if (!def) {
         continue;
       }
-      var tags = def.tags || [];
-      if (tags.length == 0) {
-        console.log("Ignoring " + name + "." + method
-          + " because it has no tags");
-        continue;
-      } else if (tags.length > 1) {
-        console.log("Ignoring " + name + "." + method
-          + " because it has multiple tags: " + tags);
-        continue;
+      var id = def.operationId;
+      if (id == null) {
+        // Generate an id if none
+        id = toOperationId(method, url);
+        console.warn("Operation '" + method + "' on '" + url 
+          + "' defines no operationId. " + "Assuming '" + id + "'.");
       }
-      var tag = tags[0];
+      var tags = def.tags || [];
+      var tag = tagName(tags.length == 0 ? null : tags[0], options);
       var descriptor = services[tag];
       if (descriptor == null) {
         descriptor = {
@@ -727,12 +770,6 @@ function processServices(swagger, models, options) {
         services[tag] = descriptor;
       }
 
-      var id = def.operationId;
-      if (id == null) {
-        console.log("Ignoring " + name + "." + method
-          + " because it has no id");
-        continue;
-      }
       var paramsClass = def.parameters.length < minParamsForContainer
         ? null : id.charAt(0).toUpperCase() + id.substr(1) + "Params";
 
@@ -800,19 +837,22 @@ function processServices(swagger, models, options) {
       var modelResult = models[removeBrackets(resultType)];
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
-      operation.operationIsPrimitiveArray = !modelResult && resultType.indexOf('[]') >= 0;
+      operation.operationIsPrimitiveArray = !modelResult && 
+        resultType.toString().indexOf('[]') >= 0;
       operation.operationIsUnknown = !(operation.operationIsVoid
         || operation.operationIsString || operation.operationIsNumber
         || operation.operationIsBoolean || operation.operationIsEnum
         || operation.operationIsObject || operation.operationIsPrimitiveArray);
       descriptor.serviceOperations.push(operation);
     }
-    services[tag] = descriptor;
+  }
 
-    // Resolve the models used by the service
+  // Resolve the models used by each
+  for (var name in services) {
+    var service = services[name];
     var dependencies = new DependenciesResolver(models);
-    for (var i = 0; i < descriptor.serviceOperations.length; i++) {
-      var op = descriptor.serviceOperations[i];
+    for (var i = 0; i < service.serviceOperations.length; i++) {
+      var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var response = op.operationResponses[code]
         dependencies.add(response.type);
@@ -822,8 +862,9 @@ function processServices(swagger, models, options) {
         dependencies.add(param.paramType);
       }
     }
-    descriptor.serviceDependencies = dependencies.get();
+    service.serviceDependencies = dependencies.get();
   }
+
   return services;
 }
 

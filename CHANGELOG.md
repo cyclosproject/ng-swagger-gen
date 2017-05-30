@@ -1,6 +1,14 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.5.1 (2017-05-30)
+- Added support for models as objects without explicit "type": "object
+  https://github.com/cyclosproject/ng-swagger-gen/issues/4
+- Error generating operations without any parameters
+  https://github.com/cyclosproject/ng-swagger-gen/issues/5
+- Added support for models of "type": "array"
+  https://github.com/cyclosproject/ng-swagger-gen/issues/6
+
 ### 0.5.0 (2017-05-16)
 - Changed the default value for `minParamsForContainer` to 2. This way,
   operations that take a single argument won't have a parameter class.

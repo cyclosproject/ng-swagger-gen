@@ -1,6 +1,3 @@
-{{#modelDependencies}}import { {{modelClass}} } from './{{modelFile}}';
-{{/modelDependencies}}
-
 {{{modelComments}}}
 export class {{modelClass}} {{#modelParent}}extends {{modelName}} {{/modelParent}}{
   {{#modelProperties}}

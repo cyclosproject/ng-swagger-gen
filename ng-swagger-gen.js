@@ -430,13 +430,11 @@ function processModels(swagger, options) {
     var properties = null;
     var requiredProperties = null;
     var enumValues = null;
+    var elementType = null;
     if (model.allOf != null && model.allOf.length > 0) {
       parent = simpleRef((model.allOf[0] || {}).$ref);
       properties = (model.allOf[1] || {}).properties || {};
       requiredProperties = (model.allOf[1] || {}).required || [];
-    } else if (model.type === 'object') {
-      properties = model.properties || {};
-      requiredProperties = model.required || [];
     } else if (model.type === 'string') {
       enumValues = model.enum || [];
       if (enumValues.length == 0) {
@@ -453,6 +451,11 @@ function processModels(swagger, options) {
           enumValues[i] = enumDescriptor;
         }
       }
+    } else if (model.type === 'array') {
+      elementType = propertyType(model);
+    } else if (model.type === 'object' || model.type === undefined) {
+      properties = model.properties || {};
+      requiredProperties = model.required || [];
     } else {
       console.error("Unhandled model type for " + name);
       process.exit(1);
@@ -465,9 +468,11 @@ function processModels(swagger, options) {
       "modelParent": parent,
       "modelIsObject": properties != null,
       "modelIsEnum": enumValues != null,
+      "modelIsArray": elementType != null,
       "properties": properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
       "modelEnumValues": enumValues,
+      "modelElementType": elementType,
       "modelSubclasses": []
     };
 
@@ -512,8 +517,8 @@ function processModels(swagger, options) {
   // Now that the model hierarchy is ok, resolve the dependencies
   for (var name in models) {
     var model = models[name];
-    if (!model.modelIsObject) {
-      // Only objects can have dependencies
+    if (model.modelIsEnum) {
+      // Enums have no dependencies
       continue;
     }
     var dependencies = new DependenciesResolver(models, model.modelName);
@@ -524,24 +529,33 @@ function processModels(swagger, options) {
     }
 
     // The subclasses are dependencies
-    for (var i = 0; i < model.modelSubclasses.length; i++) {
-      var child = model.modelSubclasses[i];
-      dependencies.add(child.modelName);
+    if (model.modelSubclasses) {
+      for (var i = 0; i < model.modelSubclasses.length; i++) {
+        var child = model.modelSubclasses[i];
+        dependencies.add(child.modelName);
+      }
     }
 
     // Each property may add a dependency
-    for (var i = 0; i < model.modelProperties.length; i++) {
-      var property = model.modelProperties[i];
-      var type = property.propertyType;
-      if (type.allTypes) {
-        // This is an inline object. Append all types
-        type.allTypes.forEach((t, i) => dependencies.add(t));
-      } else {
-        dependencies.add(type);
+    if (model.modelProperties) {
+      for (var i = 0; i < model.modelProperties.length; i++) {
+        var property = model.modelProperties[i];
+        var type = property.propertyType;
+        if (type.allTypes) {
+          // This is an inline object. Append all types
+          type.allTypes.forEach((t, i) => dependencies.add(t));
+        } else {
+          dependencies.add(type);
+        }
       }
     }
-    model.modelDependencies = dependencies.get();
 
+    // If an array, the element type is a dependency
+    if (model.modelElementType) {
+      dependencies.add(model.modelElementType)
+    }
+
+    model.modelDependencies = dependencies.get();
   }
 
   return models;
@@ -770,12 +784,14 @@ function processServices(swagger, models, options) {
         services[tag] = descriptor;
       }
 
-      var paramsClass = def.parameters.length < minParamsForContainer
+      var parameters = def.parameters || [];
+
+      var paramsClass = parameters.length < minParamsForContainer
         ? null : id.charAt(0).toUpperCase() + id.substr(1) + "Params";
 
       var operationParameters = [];
-      for (var p = 0; p < def.parameters.length; p++) {
-        var param = def.parameters[p];
+      for (var p = 0; p < parameters.length; p++) {
+        var param = parameters[p];
         if (param.$ref) {
           param = resolveRef(swagger, param.$ref);
         }

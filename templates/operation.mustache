@@ -2,7 +2,7 @@
 {{{operationComments}}}
   {{operationName}}({{#operationParamsClass
   }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}{{^operationParamsClass
-  }}{{#operationParameters}}{{paramName}}{{^paramRequired}}?{{/paramRequired}}: {{paramType
+  }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType
   }}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
     }}): Promise<_ApiResponse_<{{operationResultType}}>> {

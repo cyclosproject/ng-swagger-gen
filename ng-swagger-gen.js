@@ -801,7 +801,6 @@ function processServices(swagger, models, options) {
           paramType = propertyType(param);
         }
         var paramVar = toIdentifier(param.name);
-        console.log(param.name + " / " + paramVar)
         var paramDescriptor = {
           "paramName": param.name,
           "paramIn": param.in,

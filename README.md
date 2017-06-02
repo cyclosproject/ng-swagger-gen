@@ -204,18 +204,14 @@ directly), you can setup a script to make sure the generated API classes are
 consistent with the swagger descriptor.
 
 To do so, create the `ng-swagger-gen.json` configuration file and add the
-following in your `package.json`:
+following `scripts` to your `package.json`:
 ```json
 {
-  //...
   "scripts": {
-    "ng": "ng",
     "ng-swagger-gen": "ng-swagger-gen",
     "start": "ng-swagger-gen && ng serve",
-    "build": "ng-swagger-gen && ng build -prod",
-    "lint": "ng lint"
-  },
-  //...
+    "build": "ng-swagger-gen && ng build -prod"
+  }
 }
 ```
 This way whenever you run `npm start` or `npm run build`, the API classes

@@ -1,11 +1,12 @@
-nd-swagger-gen: A Swagger 2.0 codegen for Angular 2+
+ng-swagger-gen: A Swagger 2.0 codegen for Angular 2+
 ---
 
-This project is a NPM module that takes a [Swagger 2.0](http://swagger.io/)
-JSON [specification](http://swagger.io/specification/) and generates services
-and model classes for an Angular 2+ project.
+This project is a NPM module that generates model classes and webservice clients
+from a [Swagger 2.0](http://swagger.io/) JSON
+[specification](http://swagger.io/specification/). The generated classes follow
+are to be used by Angular 2+ projects.
 
-This generator may not cover all usages of the Swagger 2.0 specifications.
+This generator may not cover all corner cases of the Swagger 2.0 specification.
 
 The design principles are:
 
@@ -45,18 +46,22 @@ In your project, run:
 ```bash
 cd <your_angular2+_app_dir>
 npm install ng-swagger-gen --save-dev
-node_modules/.bin/ng-swagger-gen <path_to_swagger_json> [output_dir]
+node_modules/.bin/ng-swagger-gen -i <path_to_swagger_json> [-o output_dir]
 ```
 Where:
 
-- `path_to_swagger` is either a relative path to the Swagger JSON file or an
-  URL.
+- `path_to_swagger_json` is either a relative path to the Swagger JSON
+  file or an URL.
 - `output_dir` is the directory where the generated code will be outputted. It
   is recommended that this directory is ignored on GIT (or whatever source
   control software you are using), for example, by adding its name to
   `.gitignore`. The default output directory if nothing is specified is
   `src/app/api`.
 
+Please, run the `ng-swagger-gen` with the `--help` argument to view all
+available command line arguments.
+
+### Generated folder structure
 The folder `src/app/api` (or your custom folder) will contain the following
 structure:
 
@@ -119,17 +124,33 @@ The files are:
   injection in your component constructors.
 
 ## Using a configuration file
-If you place a file called `ng-swagger-gen.json` in the root folder of your
-project, or in the current directory if `ng-swagger-gen` is installed globally,
-the script parameters can be omitted. It is recommended to use a configuration
-file, because it grants greater control over the generation.
+On regular usage it is recommended to use a configuration file instead of
+passing command-line arguments to `ng-swagger-gen`. The configuration file name
+is `ng-swagger-gen.json`, and should be placed on the root folder of your
+NodeJS project. Besides allowing to omit the command-line arguments, using a
+the configuration file allows a greater degree of control over the generation.
 
-If you have installed and saved the `ng-swagger-gen` module in your node
-project, you can use a JSON schema in your configuration file pointing to
-`./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json`.
+An accompanying JSON schema is also available, so the configuration file can be
+validated, and the IDE can autocomplete the file. If you have installed and
+saved the `ng-swagger-gen` module in your node project, you can use a local copy
+of the JSON schema on `./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json`.
 It is also possible to use the online version at 
 `https://github.com/cyclosproject/ng-swagger-gen/blob/master/ng-swagger-gen-schema.json`.
 
+### Generating the configuration file
+To generate a configuration file, run the following in the root folder of
+your project;
+
+```bash
+ng-swagger-gen --gen-config [-i path_to_swagger_json] [-o output_dir]
+```
+
+This will generate the `ng-swagger-gen.json` file in the current directory
+with the property defaults, plus the input Swagger JSON path (or URL) and
+the output directory that were specified together. Both are optional, and the
+file is generated anyway.
+
+### Configuration file reference
 The supported properties in the JSON file are:
 
 - `swagger`: The location of the swagger descriptor in JSON format.
@@ -155,6 +176,7 @@ The supported properties in the JSON file are:
   provides all services. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
 
+### Configuration file example
 The following is an example of a configuration file which will choose a few
 tags to generate, and chose not to generate the ApiModule class:
 ```json
@@ -196,7 +218,7 @@ following in your `package.json`:
   ...
 }
 ```
-This way whenever you run `npm run start` or `npm run build`, the API classes
+This way whenever you run `npm start` or `npm run build`, the API classes
 will be generated before actually serving / building your application.
 
 ## Swagger extensions
@@ -219,5 +241,5 @@ instance, the following commands will generate an API client for
 ng new petstore
 cd petstore
 npm install --save-dev ng-swagger-gen
-node_modules/.bin/ng-swagger-gen http://petstore.swagger.io/v2/swagger.json
+node_modules/.bin/ng-swagger-gen -i http://petstore.swagger.io/v2/swagger.json
 ```

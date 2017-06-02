@@ -1,30 +1,133 @@
 #!/usr/bin/env node
 'use strict';
 
+function parseJSON(file) {
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
 const CONFIG = 'ng-swagger-gen.json';
+const SCHEMA = 'ng-swagger-gen-schema.json';
 const fs = require('fs')
 const path = require('path')
+const ArgumentParser = require('argparse').ArgumentParser
+const pkg = parseJSON(path.join(__dirname, "package.json"));
+const schema = parseJSON(path.join(__dirname, SCHEMA));
 
-var options = null;
-if (process.argv.length < 3) {
-  // No arguments - check if the ng-swagger-gen.json file exists
-  if (fs.existsSync(CONFIG)) {
-    // It exists, read options from it
-    options = JSON.parse(fs.readFileSync(CONFIG, "utf8"));
+var argParser = new ArgumentParser({
+  version: pkg.version,
+  addHelp: true,
+  description: "Swagger API client generator for Angular 2+ projects. "
+  + "Either a file named " + CONFIG + " should exist in the current directory, "
+  + "allowing the program to be called without arguments, or the swagger input "
+  + "file must be specified. A configuration file can be generated with all "
+  + "default values if --gen-config is specified, together with the swagger "
+  + "input file, which is also required in this case."
+});
+argParser.addArgument(
+  ["-i", "--input", "-s", "--swagger"],
+  {
+    help: "The swagger input file or URL. If not specified, it is required "
+    + "that a configuration file called " + CONFIG
+    + " exist in the current directory.",
+    dest: "swagger",
+    metavar: "SWAGGER"
+  }
+);
+argParser.addArgument(
+  ["-o", "--output"],
+  {
+    help: "The root directory where files will be generated.",
+    defaultValue: schema.properties.output.default,
+    dest: "output"
+  }
+);
+argParser.addArgument(
+  ["--gen-config"],
+  {
+    help: "Generates the configuration file " + CONFIG + " "
+    + "in the current directory. No Swagger client classes are generated. "
+    + "If input and output are specified, their values are stored in the "
+    + "generated file as well.",
+    action: "storeTrue",
+    dest: "genConfig"
+  }
+);
+var args = argParser.parseArgs();
+
+// Check the action
+var configExists = fs.existsSync(CONFIG);
+if (args.genConfig) {
+  if (configExists) {
+    // Ask for confirmation
+    askThenGenerateConfig();
   } else {
-    // The config file doesn't exist. Log and exit.
-    console.log("No file " + CONFIG + " in current directory. It means the "
-      + "swagger file location is required. Usage: \n" + process.argv[1] 
-      + " <swagger.json> [output dir]");
-    process.exit(1);
+    // Write the configuration file
+    generateConfig();
   }
 } else {
-  // Arguments were given. Prepare the options from it
-  options = {
-    swagger: process.argv[2],
-    output: process.argv.length > 3 ? process.argv[3] : 'src/app/api'
+  if (args.swagger) {
+    // The args variables are the same one as the options
+    run(args);
+  } else if (configExists) {
+    // The configuration file exists, so read it
+    run(parseJSON(CONFIG));
+  } else {
+    // No configuration file. Show the usage and exit.
+    argParser.parseArgs(["--help"]);
   }
 }
 
-var ngSwaggerGen = require("./ng-swagger-gen.js");
-ngSwaggerGen(options);
+/**
+ * Generates a configuration file in the current directory
+ */
+function generateConfig() {
+  var options = {
+    "$schema": "./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json"
+  };
+  options.swagger = args.swagger ? args.swagger : "<swagger file>";
+  if (args.output) {
+    options.output = args.output;
+  }
+  var properties = schema.properties;
+  for (var propName in properties) {
+    var propDef = properties[propName];
+    if (propDef.default && !options[propName]) {
+      var value = propDef.default;
+      if (propDef.type == "boolean") {
+        value = value === 'true';
+      } else if (propDef.type == "integer") {
+        value = parseInt(value, 10);
+      }
+      options[propName] = value;
+    }
+  }
+  var json = JSON.stringify(options, null, 2);
+  fs.writeFileSync(CONFIG, json, {encoding: "utf8"});
+  console.info("Wrote " + CONFIG);
+}
+
+/**
+ * Asks if the configuration file should be overridden, then, if so, do it
+ */
+function askThenGenerateConfig() {
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  rl.question("The configuration file " + CONFIG + " already exists.\n"
+  + "Do you want to override it? [y/N]", (answer) => {
+    if (answer == 'y' || answer == 'Y') {
+      generateConfig();
+    }
+    rl.close();
+  });
+}
+
+/**
+ * Runs the ng-swagger-gen generation
+ */
+function run(options) {
+  var ngSwaggerGen = require("./ng-swagger-gen.js");
+  ngSwaggerGen(options);
+}

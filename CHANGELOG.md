@@ -1,8 +1,12 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.5.2 (2017-06-02)
+- Added support for parameters with [] in name
+  https://github.com/cyclosproject/ng-swagger-gen/issues/7
+
 ### 0.5.1 (2017-05-30)
-- Added support for models as objects without explicit "type": "object
+- Added support for models as objects without explicit "type": "object"
   https://github.com/cyclosproject/ng-swagger-gen/issues/4
 - Error generating operations without any parameters
   https://github.com/cyclosproject/ng-swagger-gen/issues/5

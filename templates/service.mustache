@@ -24,7 +24,7 @@ export class {{serviceClass}} {
 
 export module {{serviceClass}} {
 {{#serviceOperations}}{{#operationParamsClass}}  export interface {{operationParamsClass}} {
-{{#operationParameters}}    {{paramName}}{{^paramRequired}}?{{/paramRequired}}: {{paramType}};
+{{#operationParameters}}    {{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType}};
 {{/operationParameters}}
   }
 {{/operationParamsClass}}{{/serviceOperations}}

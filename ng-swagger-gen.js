@@ -718,14 +718,13 @@ function toPathExpression(paramsClass, path) {
 }
 
 /**
- * Generates an operation id given a method an URL
+ * Transforms the given string into a valid identifier
  */
-function toOperationId(method, url) {
-  var temp = method + url;
+function toIdentifier(string) {
   var result = "";
   var wasSep = false;
-  for (var i = 0; i < temp.length; i++) {
-    var c = temp.charAt(i)
+  for (var i = 0; i < string.length; i++) {
+    var c = string.charAt(i)
     if (/[a-z|A-Z|0-9]/.test(c)) {
       if (wasSep) {
         c = c.toUpperCase();
@@ -767,7 +766,7 @@ function processServices(swagger, models, options) {
       var id = def.operationId;
       if (id == null) {
         // Generate an id if none
-        id = toOperationId(method, url);
+        id = toIdentifier(method + url);
         console.warn("Operation '" + method + "' on '" + url 
           + "' defines no operationId. " + "Assuming '" + id + "'.");
       }
@@ -801,10 +800,13 @@ function processServices(swagger, models, options) {
         } else {
           paramType = propertyType(param);
         }
+        var paramVar = toIdentifier(param.name);
+        console.log(param.name + " / " + paramVar)
         var paramDescriptor = {
           "paramName": param.name,
           "paramIn": param.in,
-          "paramVar": (paramsClass == null ? "" : "params.") + param.name,
+          "paramVar": paramVar,
+          "paramFullVar": (paramsClass == null ? "" : "params.") + paramVar,
           "paramRequired": param.required === true || param.in === 'path',
           "paramIsQuery": param.in === 'query',
           "paramIsPath": param.in === 'path',

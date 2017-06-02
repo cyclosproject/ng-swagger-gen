@@ -207,15 +207,15 @@ To do so, create the `ng-swagger-gen.json` configuration file and add the
 following in your `package.json`:
 ```json
 {
-  ...
+  //...
   "scripts": {
-    "ng": "ng",|
-    "ng-swagger-gen": "ng-swagger-gen",|
+    "ng": "ng",
+    "ng-swagger-gen": "ng-swagger-gen",
     "start": "ng-swagger-gen && ng serve",
     "build": "ng-swagger-gen && ng build -prod",
     "lint": "ng lint"
   },
-  ...
+  //...
 }
 ```
 This way whenever you run `npm start` or `npm run build`, the API classes

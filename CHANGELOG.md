@@ -1,6 +1,9 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.5.3 (2017-06-02)
+- Removed an unwanted debug log
+
 ### 0.5.2 (2017-06-02)
 - Added support for parameters with [] in name
   https://github.com/cyclosproject/ng-swagger-gen/issues/7

@@ -30,5 +30,8 @@
         }}{{#operationIsPrimitiveArray}}response.json() as {{operationResultType}}{{/operationIsPrimitiveArray
         }}{{#operationIsUnknown}}null{{/operationIsUnknown}});
       }){{#generalErrorHandler}}
-      .catch(ApiConfiguration.handleError){{/generalErrorHandler}};
+      .catch(e => {
+        ApiConfiguration.handleError(e);
+        throw e;
+      }){{/generalErrorHandler}};
   }

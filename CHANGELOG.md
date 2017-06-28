@@ -1,6 +1,11 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.7.0 (2017-06-28)
+- Rethrow captured errors after handling them on promises
+  https://github.com/cyclosproject/ng-swagger-gen/issues/10
+- Minor fixes
+
 ### 0.6.0 (2017-06-02)
 - Allow generating the configuration file.
   https://github.com/cyclosproject/ng-swagger-gen/issues/8

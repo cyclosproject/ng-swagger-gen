@@ -91,7 +91,7 @@ function generateConfig() {
   var properties = schema.properties;
   for (var propName in properties) {
     var propDef = properties[propName];
-    if (propDef.default && !options[propName]) {
+    if (propDef.default && !options.hasOwnProperty(propName)) {
       var value = propDef.default;
       if (propDef.type == "boolean") {
         value = value === 'true';

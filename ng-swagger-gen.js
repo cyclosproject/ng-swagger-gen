@@ -713,8 +713,8 @@ function processResponses(def, path, models) {
  * if there is a parameters class, or "/a/${var1}/b/${var2}" otherwise.
  */
 function toPathExpression(paramsClass, path) {
-  var repl = paramsClass == null ? "${" : "${params.";
-  return (path || "").replace("{", repl);
+  var repl = paramsClass == null ? "$${" : "$${params.";
+  return (path || "").replace(/\{/g, repl);
 }
 
 /**

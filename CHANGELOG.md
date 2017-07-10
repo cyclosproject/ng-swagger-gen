@@ -1,6 +1,10 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.7.1 (2017-07-10)
+- If an operation has multiple path variables, only the first one is correctly handled
+  https://github.com/cyclosproject/ng-swagger-gen/issues/11
+
 ### 0.7.0 (2017-06-28)
 - Rethrow captured errors after handling them on promises
   https://github.com/cyclosproject/ng-swagger-gen/issues/10

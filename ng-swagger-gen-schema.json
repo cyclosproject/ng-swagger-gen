@@ -10,6 +10,11 @@
     "$schema": {
       "type": "string"
     },
+    "config": {
+      "description": "The location of the configuration file.",
+      "type": "string",
+      "default": "ng-swagger-gen.json"
+    },
     "swagger": {
       "description": "The location of the swagger descriptor in JSON format.\nMay be either a local file or URL.",
       "type": "string"

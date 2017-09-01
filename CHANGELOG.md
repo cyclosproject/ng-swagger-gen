@@ -1,9 +1,11 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
-### 0.7.2 (2017-08-23)
+### 0.8.0 (2017-08-31)
 - Allow specifying the configuration file
   https://github.com/cyclosproject/ng-swagger-gen/issues/13
+- Added support for models as simple types
+  https://github.com/cyclosproject/ng-swagger-gen/issues/12
 
 ### 0.7.1 (2017-07-10)
 - If an operation has multiple path variables, only the first one is correctly handled

@@ -431,6 +431,7 @@ function processModels(swagger, options) {
     var requiredProperties = null;
     var enumValues = null;
     var elementType = null;
+    var simpleType = null;
     if (model.allOf != null && model.allOf.length > 0) {
       parent = simpleRef((model.allOf[0] || {}).$ref);
       properties = (model.allOf[1] || {}).properties || {};
@@ -438,8 +439,8 @@ function processModels(swagger, options) {
     } else if (model.type === 'string') {
       enumValues = model.enum || [];
       if (enumValues.length == 0) {
-        console.error("Enum " + name + " has no possible values");
-        process.exit(1);
+        simpleType = "string";
+        enumValues = null;
       } else {
         for (var i = 0; i < enumValues.length; i++) {
           var enumValue = enumValues[i];
@@ -457,8 +458,7 @@ function processModels(swagger, options) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
     } else {
-      console.error("Unhandled model type for " + name);
-      process.exit(1);
+      simpleType = propertyType(model);
     }
     var descriptor = {
       "modelName": name,
@@ -469,6 +469,8 @@ function processModels(swagger, options) {
       "modelIsObject": properties != null,
       "modelIsEnum": enumValues != null,
       "modelIsArray": elementType != null,
+      "modelIsSimple": simpleType != null,
+      "modelSimpleType": simpleType,
       "properties": properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
       "modelEnumValues": enumValues,
@@ -517,8 +519,8 @@ function processModels(swagger, options) {
   // Now that the model hierarchy is ok, resolve the dependencies
   for (var name in models) {
     var model = models[name];
-    if (model.modelIsEnum) {
-      // Enums have no dependencies
+    if (model.modelIsEnum || model.modelIsSimple) {
+      // Enums or simple types have no dependencies
       continue;
     }
     var dependencies = new DependenciesResolver(models, model.modelName);

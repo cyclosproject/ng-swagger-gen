@@ -1,6 +1,10 @@
 # Changelog
 This is the version history for `ng-swagger-gen`
 
+### 0.8.1 (2017-09-15)
+- Support tag names with punctuations
+  https://github.com/cyclosproject/ng-swagger-gen/issues/14
+
 ### 0.8.0 (2017-08-31)
 - Allow specifying the configuration file
   https://github.com/cyclosproject/ng-swagger-gen/issues/13

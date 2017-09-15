@@ -748,6 +748,7 @@ function tagName(tag, options) {
   if (tag == null || tag === '') {
     tag = options.defaultTag || "Api";
   }
+  tag = toIdentifier(tag);
   return tag.charAt(0).toUpperCase() + (tag.length == 1 ? "" : tag.substr(1));
 }
 

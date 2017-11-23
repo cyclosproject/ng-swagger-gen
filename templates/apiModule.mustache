@@ -1,13 +1,23 @@
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
+import { ApiConfiguration } from './api-configuration';
 
 {{#services}}import { {{serviceClass}} } from './services/{{serviceFile}}';
 {{/services}}
 
+/**
+ * Module that provides instances for all API services
+ */
 @NgModule({
-  imports: [],
-  exports: [],
+  imports: [
+    HttpClientModule
+  ],
+  exports: [
+    HttpClientModule
+  ],
   declarations: [],
   providers: [
+    ApiConfiguration,
 {{#services}}   {{serviceClass}}{{^serviceIsLast}},{{/serviceIsLast}}
 {{/services}}
   ],

@@ -1,24 +1,28 @@
 /* tslint:disable */
 import { Injectable } from '@angular/core';
-import { Http, Response, Headers, URLSearchParams, RequestOptions } from '@angular/http';
-
-import 'rxjs/add/operator/toPromise';
-
+import {
+  HttpClient, HttpRequest, HttpResponse, 
+  HttpHeaders, HttpParams } from '@angular/common/http';
+import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
-import { ApiResponse as _ApiResponse_ } from '../api-response';
+import { Observable } from 'rxjs/Observable';
+import { map, filter } from 'rxjs/operators';
 
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
 
 {{{serviceComments}}}
 @Injectable()
-export class {{serviceClass}} {
+export class {{serviceClass}} extends BaseService {
   constructor(
-    public http: Http
+    config: ApiConfiguration,
+    http: HttpClient
   ) {
+    super(config, http);
   }
 {{#serviceOperations}}
-{{>operation}}
+{{>operationResponse}}
+{{>operationBody}}
 {{/serviceOperations}}
 }
 

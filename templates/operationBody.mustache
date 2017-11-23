@@ -1,0 +1,16 @@
+
+{{{operationComments}}}
+  {{operationName}}({{#operationParamsClass
+  }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}{{^operationParamsClass
+  }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType
+  }}{{^paramIsLast}},
+    {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
+    }}): Observable<{{operationResultType}}> {
+    return this.{{operationName}}Response({{#operationParamsClass
+    }}params{{/operationParamsClass}}{{^operationParamsClass
+    }}{{#operationParameters}}{{paramVar}}{{^paramIsLast}}, {{/paramIsLast
+    }}{{/operationParameters}}{{/operationParamsClass
+    }}).pipe(
+      map(_r => _r.body)
+    );
+  }

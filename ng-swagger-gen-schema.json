@@ -56,11 +56,6 @@
       "type": "boolean",
       "default": "true"
     },
-    "errorHandler": {
-      "description": "Indicates whether or not to generate all service calls with a global error handler. Defaults to true.",
-      "type": "boolean",
-      "default": "true"
-    },
     "serviceIndex": {
       "description": "Indicates whether or not to generate the file which exports all services. Defaults to true.",
       "type": "boolean",

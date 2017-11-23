@@ -1,3 +1,11 @@
 {
-"editor.rulers": [80]
+"editor.rulers": [
+  80
+],
+"spellright.language": "en_US",
+"spellright.documentTypes": [
+  "markdown",
+  "latex",
+  "plaintext"
+]
 }

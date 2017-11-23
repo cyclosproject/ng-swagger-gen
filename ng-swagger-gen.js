@@ -215,16 +215,16 @@ function doGenerate(swaggerContent, options) {
     var basePath = (swagger.basePath || "/");
     var rootUrl = scheme + "://" + host + basePath;
     var context = {
-      "rootUrl": rootUrl,
-      "generalErrorHandler": options.errorHandler !== false
+      "rootUrl": rootUrl
     };
     generate(templates.apiConfiguration, context,
       output + "/api-configuration.ts");
   }
 
-  // Write the ApiResponse
+  // Write the BaseService
   {
-    generate(templates.apiResponse, {}, output + "/api-response.ts");
+    generate(templates.baseService, {},
+      output + "/base-service.ts");
   }
 }
 
@@ -688,6 +688,7 @@ function resolveRef(swagger, ref) {
 function processResponses(def, path, models) {
   var responses = def.responses || {};
   var operationResponses = {};
+  operationResponses.returnHeaders = false;
   for (var code in responses) {
     var response = responses[code];
     if (!response.schema) {
@@ -697,6 +698,12 @@ function processResponses(def, path, models) {
     if (/2\d\d/.test(code)) {
       // Successful response
       operationResponses.resultType = type;
+      var headers = response.headers || {};
+      for (var prop in headers) {
+        // This operation returns at least one header
+        operationResponses.returnHeaders = true;
+        break;
+      }
     }
     operationResponses[code] = {
       "code": code,
@@ -842,23 +849,32 @@ function processServices(swagger, models, options) {
       var operation = {
         "operationName": id,
         "operationParamsClass": paramsClass,
-        "operationMethod": method.toLocaleLowerCase(),
+        "operationMethod": method.toLocaleUpperCase(),
         "operationPath": url,
         "operationPathExpression": toPathExpression(paramsClass, url),
-        "operationComments": toComments(docString, 1),
         "operationResultType": resultType,
+        "operationComments": toComments(docString, 1),
         "operationParameters": operationParameters,
         "operationResponses": operationResponses
       }
-      operation.operationIsVoid = resultType === 'void';
-      operation.operationIsString = resultType === 'string';
-      operation.operationIsNumber = resultType === 'number';
-      operation.operationIsBoolean = resultType === 'boolean';
       var modelResult = models[removeBrackets(resultType)];
+      var actualType = resultType;
+      if (modelResult && modelResult.modelIsSimple) {
+        actualType = modelResult.modelSimpleType;
+        var actualModel = models[removeBrackets(actual)];
+      }
+      operation.operationIsVoid = actualType === 'void';
+      operation.operationIsString = actualType === 'string';
+      operation.operationIsNumber = actualType === 'number';
+      operation.operationIsBoolean = actualType === 'boolean';
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsPrimitiveArray = !modelResult && 
         resultType.toString().indexOf('[]') >= 0;
+      operation.operationResponseType = operation.operationIsVoid
+        || operation.operationIsString || operation.operationIsNumber
+        || operation.operationIsBoolean || operation.operationIsEnum
+        ? 'text' : 'json';
       operation.operationIsUnknown = !(operation.operationIsVoid
         || operation.operationIsString || operation.operationIsNumber
         || operation.operationIsBoolean || operation.operationIsEnum

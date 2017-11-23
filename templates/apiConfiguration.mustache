@@ -1,7 +1,10 @@
-import { RequestOptions } from '@angular/http';
+/* tslint:disable */
+import { Injectable } from '@angular/core';
 
+/**
+ * Contains global configuration for API services
+ */
+@Injectable()
 export class ApiConfiguration {
-  public static rootUrl: string = "{{{rootUrl}}}";{{#generalErrorHandler}}
-  public static handleError: (error: any) => void = (error) => alert(error);{{/generalErrorHandler}}
-  public static prepareRequestOptions: (options: RequestOptions) => void = (req) => {};
+  rootUrl: string = "{{{rootUrl}}}";
 }

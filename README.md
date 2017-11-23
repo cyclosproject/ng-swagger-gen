@@ -11,7 +11,7 @@ was used to generating requests. Starting with version 0.9, `HttpClient` is
 used instead - hence the requirement for Angular 4.3+.
 Also, taking the opportunity to break backwards compatibility,
 some additional changes were also performed. For more details, please see
-the [[Migrating to version 0.9+]] page.
+the [Upgrading from previous versions to 0.9](https://github.com/cyclosproject/ng-swagger-gen/wiki/Upgrading-from-previous-versions-to-0.9-) page in the project wiki.
 
 This generator may not cover all corner cases of the Swagger 2.0 specification.
 
@@ -39,7 +39,7 @@ Here are a few notes:
   YAML format, use the [online swagger editor](http://editor.swagger.io) to
   export the descriptor as JSON;
 - Each operation is assumed to have a single tag. If none is declared, a default
-  of `Api`(configurable) is assumed. If multiple tags are declared, the first
+  of `Api` (configurable) is assumed. If multiple tags are declared, the first
   one is used;
 - Each tag generates a service class;
 - Operations that don't declare an id have an id generated. However, it is
@@ -50,14 +50,14 @@ Here are a few notes:
   another one returning `Observable<T>`. Previous versions generated `Promises`
   instead, but as of version 0.9+, and refactored support to Angular 5 /
   `HttpClient`, `Observable`s are returned instead, as they are more flexible.
-  Actually, for those still preferring promises, it is just call the
+  Actually, those still preferring promises can just call the
   `Observable.toPromise()` method;
 - Probably many more.
 
 ## How to use it:
 In your project, run:
 ```bash
-cd <your_angular2+_app_dir>
+cd <your_angular_app_dir>
 npm install ng-swagger-gen --save-dev
 node_modules/.bin/ng-swagger-gen -i <path_to_swagger_json> [-o output_dir]
 ```
@@ -126,13 +126,14 @@ The files are:
 
 ## Using a configuration file
 On regular usage it is recommended to use a configuration file instead of
-passing command-line arguments to `ng-swagger-gen`. The configuration file name
-is `ng-swagger-gen.json`, and should be placed on the root folder of your
-NodeJS project. Besides allowing to omit the command-line arguments, using a
-the configuration file allows a greater degree of control over the generation.
+passing command-line arguments to `ng-swagger-gen`. The default configuration
+file name is `ng-swagger-gen.json`, and should be placed on the root folder
+of your NodeJS project. Besides allowing to omit the command-line arguments,
+using a the configuration file allows a greater degree of control over the
+generation.
 
 An accompanying JSON schema is also available, so the configuration file can be
-validated, and the IDE can autocomplete the file. If you have installed and
+validated, and IDEs can autocomplete the file. If you have installed and
 saved the `ng-swagger-gen` module in your node project, you can use a local copy
 of the JSON schema on `./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json`.
 It is also possible to use the online version at 
@@ -172,7 +173,7 @@ The supported properties in the JSON file are:
 - `serviceIndex`: Indicates whether or not to generate the file which exports
   all services. Defaults to true.
 - `apiModule`: Indicates whether or not to generate the Angular module which
-  provides all services. Defaults to true.
+  provides all services and the `ApiConfiguration`. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
 
 ### Configuration file example
@@ -194,8 +195,6 @@ tags to generate, and chose not to generate the ApiModule class:
 This will not only generate only the services for the chosen tags, but models
 which are not referenced by any of the generated services are skipped,
 preventing the generation of unused classes.
-
-### 
 
 ## Setting up a node script
 Regardless If your Angular project was generated or is managed by

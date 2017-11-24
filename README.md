@@ -11,7 +11,7 @@ was used to generating requests. Starting with version 0.9, `HttpClient` is
 used instead - hence the requirement for Angular 4.3+.
 Also, taking the opportunity to break backwards compatibility,
 some additional changes were also performed. For more details, please see
-the [Upgrading from previous versions to 0.9](https://github.com/cyclosproject/ng-swagger-gen/wiki/Upgrading-from-previous-versions-to-0.9-) page in the project wiki.
+the [Upgrading from previous versions to 0.9](https://github.com/cyclosproject/ng-swagger-gen/wiki/Upgrading-from-previous-versions-to-0.9) page in the project wiki.
 
 This generator may not cover all corner cases of the Swagger 2.0 specification.
 

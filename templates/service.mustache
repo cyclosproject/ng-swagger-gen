@@ -6,7 +6,8 @@ import {
 import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { Observable } from 'rxjs/Observable';
-import { map, filter } from 'rxjs/operators';
+import { map } from 'rxjs/operators/map';
+import { filter } from 'rxjs/operators/filter';
 
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}

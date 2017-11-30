@@ -73,6 +73,10 @@ function doGenerate(swaggerContent, options) {
   var templates = options.templates;
   var output = options.output || 'src/app/api';
 
+  // Strip out the UTF-BOM if present
+  swaggerContent = swaggerContent.replace(/^\uFEFF/, '');
+
+  // Proceed with the JSON parsing
   var swagger = JSON.parse(swaggerContent);
   if (typeof swagger != 'object') {
     console.error("Invalid swagger content");

@@ -6,33 +6,32 @@ function parseJSON(file) {
 }
 
 const SCHEMA = 'ng-swagger-gen-schema.json';
-const fs = require('fs')
-const path = require('path')
-const ArgumentParser = require('argparse').ArgumentParser
+const fs = require('fs');
+const path = require('path');
+const ArgumentParser = require('argparse').ArgumentParser;
 const pkg = parseJSON(path.join(__dirname, "package.json"));
 const schema = parseJSON(path.join(__dirname, SCHEMA));
 
 var argParser = new ArgumentParser({
   version: pkg.version,
   addHelp: true,
-  description: "Swagger API client generator for Angular 2+ projects."
-  + " Either uses a configuration file (defaults to " + 
-  + schema.properties.config.default 
-  + " in the current directory, but the file can be specified)"
-  + " allowing the program to be called without arguments, or the swagger input"
-  + " file must be specified. A configuration file can be generated with all"
-  + " default values if --gen-config is specified, together with the swagger"
-  + " input file, which is also required in this case."
+  description: "Swagger API client generator for Angular 2+ projects." +
+  " Either uses a configuration file (defaults to " +
+  schema.properties.config.default +
+  " in the current directory, but the file can be specified)" +
+  " allowing the program to be called without arguments, or the swagger input" +
+  " file must be specified. A configuration file can be generated with all" +
+  " default values if --gen-config is specified, together with the swagger" +
+  " input file, which is also required in this case."
 });
 argParser.addArgument(
   ["-i", "--input", "-s", "--swagger"],
   {
-    help: "The swagger input file or URL. If not specified, it is required"
-    + " that a configuration file called "
-    + schema.properties.config.default
-    + " exist in the current"
-    + " directory, or a configuration file can be specified with the -c or"
-    + " --config option.",
+    help: "The swagger input file or URL. If not specified, it is required" +
+    " that a configuration file called " +
+    schema.properties.config.default +
+    " exist in the currentdirectory, or a configuration file can be" +
+    " specified with the -c or --config option.",
     dest: "swagger",
     metavar: "SWAGGER"
   }
@@ -56,12 +55,12 @@ argParser.addArgument(
 argParser.addArgument(
   ["--gen-config"],
   {
-    help: "Generates the configuration file "
-    + schema.properties.config.default 
-    + "in the current directory, or the file specified with -c or --config. "
-    + "No Swagger client classes are generated. "
-    + "If input and output are specified, their values are stored in the "
-    + "generated file as well.",
+    help: "Generates the configuration file " +
+    schema.properties.config.default +
+    "in the current directory, or the file specified with -c or --config. " +
+    "No Swagger client classes are generated. " +
+    "If input and output are specified, their values are stored in the " +
+    "generated file as well.",
     action: "storeTrue",
     dest: "genConfig"
   }
@@ -131,8 +130,8 @@ function askThenGenerateConfig() {
     input: process.stdin,
     output: process.stdout
   });
-  rl.question("The configuration file " + config + " already exists.\n"
-  + "Do you want to override it? [y/N]", (answer) => {
+  rl.question("The configuration file " + config + " already exists.\n" +
+    "Do you want to override it? [y/N]", (answer) => {
     if (answer == 'y' || answer == 'Y') {
       generateConfig();
     }

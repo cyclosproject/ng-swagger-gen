@@ -243,7 +243,7 @@ function applyTagFilter(models, services, includeTags, options) {
   if (includeTags && includeTags.length > 0) {
     included = [];
     for (var i = 0; i < includeTags.length; i++) {
-        included.push(tagName(includeTags[i], options));
+      included.push(tagName(includeTags[i], options));
     }
   }
   var usedModels = new Set();
@@ -468,21 +468,21 @@ function processModels(swagger, options) {
       simpleType = propertyType(model);
     }
     var descriptor = {
-      "modelName": name,
-      "modelClass": name,
-      "modelFile": toFileName(name),
-      "modelComments": toComments(model.description),
-      "modelParent": parent,
-      "modelIsObject": properties != null,
-      "modelIsEnum": enumValues != null,
-      "modelIsArray": elementType != null,
-      "modelIsSimple": simpleType != null,
-      "modelSimpleType": simpleType,
-      "properties": properties == null ? null :
+      modelName: name,
+      modelClass: name,
+      modelFile: toFileName(name),
+      modelComments: toComments(model.description),
+      modelParent: parent,
+      modelIsObject: properties != null,
+      modelIsEnum: enumValues != null,
+      modelIsArray: elementType != null,
+      modelIsSimple: simpleType != null,
+      modelSimpleType: simpleType,
+      properties: properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
-      "modelEnumValues": enumValues,
-      "modelElementType": elementType,
-      "modelSubclasses": []
+      modelEnumValues: enumValues,
+      modelElementType: elementType,
+      modelSubclasses: []
     };
 
     if (descriptor.properties != null) {
@@ -769,12 +769,45 @@ function tagName(tag, options) {
 }
 
 /**
+ * Returns the actual operation id, assuming the one given.
+ * If none is given, generates one
+ */
+function operationId(given, method, url, allKnown) {
+  var id;
+  var generate = given == null;
+  if (generate) {
+    id = toIdentifier(method + url);
+  } else {
+    id = given;
+  }
+  var duplicated = allKnown.has(id);
+  if (duplicated) {
+    var i = 1;
+    while (allKnown.has(id + '_' + i)) {
+      i++;
+    }
+    id = id + '_' + i;
+  }
+  if (generate) {
+    console.warn("Operation '" + method + "' on '" + url +
+      "' defines no operationId. Assuming '" + id + "'.");
+  } else if (duplicated) {
+    console.warn("Operation '" + method + "' on '" + url +
+      "' defines a duplicated operationId: " + given + ". " +
+      "Assuming '" + id + "'.");
+  }
+  allKnown.add(id);
+  return id;
+}
+
+/**
  * Process API paths, returning an object with descriptors keyed by tag name.
  * It is required that operations define a single tag, or they are ignored.
  */
 function processServices(swagger, models, options) {
   var param, name, i, j;
   var services = {};
+  var operationIds = new Set();
   var minParamsForContainer = options.minParamsForContainer || 2;
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
@@ -783,25 +816,22 @@ function processServices(swagger, models, options) {
       if (!def) {
         continue;
       }
-      var id = def.operationId;
-      if (id == null) {
-        // Generate an id if none
-        id = toIdentifier(method + url);
-        console.warn("Operation '" + method + "' on '" + url +
-          "' defines no operationId. " + "Assuming '" + id + "'.");
-      }
       var tags = def.tags || [];
       var tag = tagName(tags.length == 0 ? null : tags[0], options);
       var descriptor = services[tag];
       if (descriptor == null) {
         descriptor = {
-          "serviceName": tag,
-          "serviceClass": tag + "Service",
-          "serviceFile": toFileName(tag) + ".service",
-          "serviceOperations": []
+          serviceName: tag,
+          serviceClass: tag + "Service",
+          serviceFile: toFileName(tag) + ".service",
+          operationIds: new Set(),
+          serviceOperations: []
         };
         services[tag] = descriptor;
       }
+
+      var id = operationId(def.operationId, method, url,
+        descriptor.operationIds);
 
       var parameters = def.parameters || [];
 
@@ -822,20 +852,20 @@ function processServices(swagger, models, options) {
         }
         var paramVar = toIdentifier(param.name);
         var paramDescriptor = {
-          "paramName": param.name,
-          "paramIn": param.in,
-          "paramVar": paramVar,
-          "paramFullVar": (paramsClass == null ? "" : "params.") + paramVar,
-          "paramRequired": param.required === true || param.in === 'path',
-          "paramIsQuery": param.in === 'query',
-          "paramIsPath": param.in === 'path',
-          "paramIsHeader": param.in === 'header',
-          "paramIsBody": param.in === 'body',
-          "paramIsArray": param.type === 'array',
-          "paramDescription": param.description,
-          "paramComments": toComments(param.description, 1),
-          "paramType": paramType,
-          "paramCollectionFormat": param.collectionFormat
+          paramName: param.name,
+          paramIn: param.in,
+          paramVar: paramVar,
+          paramFullVar: (paramsClass == null ? "" : "params.") + paramVar,
+          paramRequired: param.required === true || param.in === 'path',
+          paramIsQuery: param.in === 'query',
+          paramIsPath: param.in === 'path',
+          paramIsHeader: param.in === 'header',
+          paramIsBody: param.in === 'body',
+          paramIsArray: param.type === 'array',
+          paramDescription: param.description,
+          paramComments: toComments(param.description, 1),
+          paramType: paramType,
+          paramCollectionFormat: param.collectionFormat
         };
         operationParameters.push(paramDescriptor);
       }
@@ -857,15 +887,15 @@ function processServices(swagger, models, options) {
           param.paramDescription;
       }
       var operation = {
-        "operationName": id,
-        "operationParamsClass": paramsClass,
-        "operationMethod": method.toLocaleUpperCase(),
-        "operationPath": url,
-        "operationPathExpression": toPathExpression(paramsClass, url),
-        "operationResultType": resultType,
-        "operationComments": toComments(docString, 1),
-        "operationParameters": operationParameters,
-        "operationResponses": operationResponses
+        operationName: id,
+        operationParamsClass: paramsClass,
+        operationMethod: method.toLocaleUpperCase(),
+        operationPath: url,
+        operationPathExpression: toPathExpression(paramsClass, url),
+        operationResultType: resultType,
+        operationComments: toComments(docString, 1),
+        operationParameters: operationParameters,
+        operationResponses: operationResponses
       };
       var modelResult = models[removeBrackets(resultType)];
       var actualType = resultType;

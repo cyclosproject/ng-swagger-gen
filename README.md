@@ -57,7 +57,20 @@ Here are a few notes:
   `Observable.toPromise()` method;
 - Probably many more.
 
-## How to use it:
+## Requirements
+The generator itself has very few requirements, basically
+[argparse](https://www.npmjs.com/package/argparse) and
+[mustache](https://www.npmjs.com/package/mustache).
+However, the generated code requires:
+
+- **@angular/core**: Angular version **4.3.0 or higher** is required, because
+  4.3 is the version that introduced HttpClient;
+- **rxjs**: rxjs version **5.5.0 or higher** is required, because the generated
+  code uses [lettable operators](https://github.com/ReactiveX/rxjs/blob/master/doc/lettable-operators.md).
+  Please, note that Angular 4.3 originally depended on rxjs 5.4, so, please,
+  upgrade it in your `package.json` to at least 5.5.0.
+
+## How to use it
 In your project, run:
 ```bash
 cd <your_angular_app_dir>

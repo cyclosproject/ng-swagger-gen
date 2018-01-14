@@ -1,10 +1,10 @@
 ng-swagger-gen: A Swagger 2.0 code generator for Angular 4.3+
 ---
 
-This project is a NPM module that generates model classes and webservice clients
-from a [Swagger 2.0](http://swagger.io/) JSON
-[specification](http://swagger.io/specification/). The generated classes follow
-are to be used by Angular 4.3+ projects.
+This project is a NPM module that generates model interfaces and web service
+clients from a [Swagger 2.0](http://swagger.io/) JSON
+[specification](http://swagger.io/specification/).
+The generated classes follow the principles of Angular 4.3+ projects.
 
 Up to the version 0.8.x of this generator the deprecated `Http` Angular module
 was used to generating requests. Starting with version 0.9, `HttpClient` is
@@ -23,8 +23,11 @@ The design principles are:
 - It should generate code which follows the concepts of an Angular 4+
   application, such as Modules, Injectables, etc;
 - All the server communication is implemented using `HttpClient`;
-- The generated model should handle correctly inheritance and enumerations;
-- An Angular Module (@NgModule) is generated, which exports all services;
+- The generated model should handle correctly inheritance and enumerations.
+  Starting from version `0.10` all modules are generated as TypeScript
+  interfaces rather than classes, avoiding additional overhead on generated
+  JavaScript;
+- An Angular Module (`@NgModule`) is generated, which exports all services;
 - One service is generated per Swagger tag;
 - It should be possible to choose a subset of tags from which to generate
   services;
@@ -45,7 +48,7 @@ Here are a few notes:
 - Operations that don't declare an id have an id generated. However, it is
   recommended that all operations define an id;
 - File uploads are not supported;
-- Two versions are generated for each service operation: one returning 
+- Two versions are generated for each service operation: one returning
   `Observable<HttpResponse<T>>` (the method is suffixed with `Response`) and
   another one returning `Observable<T>`. Previous versions generated `Promises`
   instead, but as of version 0.9+, and refactored support to Angular 5 /
@@ -102,9 +105,9 @@ The files are:
 
 - **api/models/model*n*.ts**: One file per model file is generated here.
   Enumerations are also correctly generated;
-- **api/models.ts**: An index script which exports all model classes. It is
+- **api/models.ts**: An index script which exports all model interfaces. It is
   used to make it easier for application classes to import models, so they can
-  use `import { Model1, Model2 } from 'api/models'` instead of 
+  use `import { Model1, Model2 } from 'api/models'` instead of
   `import { Model1 } from 'api/models/model1'` and
   `import { Model2 } from 'api/models/model2'`;
 - **api/services/tag*n*.service.ts**: One file per Swagger tag is generated
@@ -136,7 +139,7 @@ An accompanying JSON schema is also available, so the configuration file can be
 validated, and IDEs can autocomplete the file. If you have installed and
 saved the `ng-swagger-gen` module in your node project, you can use a local copy
 of the JSON schema on `./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json`.
-It is also possible to use the online version at 
+It is also possible to use the online version at
 `https://github.com/cyclosproject/ng-swagger-gen/blob/master/ng-swagger-gen-schema.json`.
 
 ### Generating the configuration file
@@ -182,7 +185,7 @@ tags to generate, and chose not to generate the ApiModule class:
 ```json
 {
   "$schema": "./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json",
-  "swagger": "my-swagger.json", 
+  "swagger": "my-swagger.json",
   "includeTags": [
     "Blogs",
     "Comments",
@@ -192,9 +195,9 @@ tags to generate, and chose not to generate the ApiModule class:
 }
 ```
 
-This will not only generate only the services for the chosen tags, but models
-which are not referenced by any of the generated services are skipped,
-preventing the generation of unused classes.
+This will generate only the services for the chosen tags, and also skip the
+generation of any interfaces for models which are not used by any of the
+generated services.
 
 ## Setting up a node script
 Regardless If your Angular project was generated or is managed by

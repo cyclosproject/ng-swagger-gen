@@ -25,7 +25,14 @@
       "default": "src/app/api"
     },
     "includeTags": {
-      "description": "When specified, filters the generated services to be only those corresponding to this list of tags.",
+      "description": "When specified, filters the generated services, including only those corresponding to this list of tags.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "excludeTags": {
+      "description": "When specified, filters the generated services, excluding any service corresponding to this list of tags.",
       "type": "array",
       "items": {
         "type": "string"

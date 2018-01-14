@@ -93,12 +93,16 @@ function doGenerate(swaggerContent, options) {
   var services = processServices(swagger, models, options);
 
   // Apply the tag filter. If includeTags is null, uses all services,
-  // but still removes unused models
-  var includeTags = options.includeTags;
+  // but still can remove unused models
+  const includeTags = options.includeTags;
   if (typeof includeTags == 'string') {
-    includeTags = includeTags.split(",");
+    options.includeTags = includeTags.split(",");
   }
-  applyTagFilter(models, services, includeTags, options);
+  const excludeTags = options.excludeTags;
+  if (typeof excludeTags == 'string') {
+    options.excludeTags = excludeTags.split(",");
+  }
+  applyTagFilter(models, services, options);
 
   // Read the templates
   var templates = {};
@@ -234,22 +238,35 @@ function doGenerate(swaggerContent, options) {
 
 /**
  * Applies a filter over the given services, keeping only the specific tags.
- * Also optionally removes any unused models, even if includeTags is null (all).
+ * Also optionally removes any unused models, even services are filtered.
  */
-function applyTagFilter(models, services, includeTags, options) {
-  var ignoreUnusedModels = options.ignoreUnusedModels !== false;
-  // Normalize the tag names
+function applyTagFilter(models, services, options) {
+  var i;
+  // Normalize the included tag names
+  const includeTags = options.includeTags;
   var included = null;
   if (includeTags && includeTags.length > 0) {
     included = [];
-    for (var i = 0; i < includeTags.length; i++) {
+    for (i = 0; i < includeTags.length; i++) {
       included.push(tagName(includeTags[i], options));
     }
   }
+  // Normalize the excluded tag names
+  const excludeTags = options.excludeTags;
+  var excluded = null;
+  if (excludeTags && excludeTags.length > 0) {
+    excluded = [];
+    for (i = 0; i < excludeTags.length; i++) {
+      excluded.push(tagName(excludeTags[i], options));
+    }
+  }
+  // Filter out the unused models
+  var ignoreUnusedModels = options.ignoreUnusedModels !== false;
   var usedModels = new Set();
   const addToUsed = (dep, index) => usedModels.add(dep);
   for (var serviceName in services) {
-    var include = !included || included.indexOf(serviceName) >= 0;
+    var include = (!included || included.indexOf(serviceName) >= 0) &&
+      (!excluded || excluded.indexOf(serviceName) < 0);
     if (!include) {
       // This service is skipped - remove it
       console.info("Ignoring service " + serviceName +

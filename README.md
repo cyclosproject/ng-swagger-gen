@@ -174,8 +174,10 @@ The supported properties in the JSON file are:
 - `swagger`: The location of the swagger descriptor in JSON format.
   May be either a local file or URL.
 - `output`: Where generated files will be written to. Defaults to `src/app/api`.
-- `includeTags`: When specified, filters the generated services to be only
+- `includeTags`: When specified, filters the generated services, including only
   those corresponding to this list of tags.
+- `excludeTags`: When specified, filters the generated services, excluding any
+  service corresponding to this list of tags.
 - `ignoreUnusedModels`: Indicates whether or not to ignore model files that are
   not referenced by any operation. Defaults to true.
 - `minParamsForContainer`: Indicates the minimum number of parameters to wrap

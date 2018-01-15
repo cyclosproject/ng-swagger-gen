@@ -6,10 +6,6 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const Mustache = require('mustache');
-const linewrap = require('linewrap');
-const wrapComments = linewrap(78, {
-  lineBreak: '\n'
-});
 
 /**
  * Main generate function
@@ -407,15 +403,12 @@ function toComments(text, level) {
   if (text == null || text.length === 0) {
     return indent;
   }
+  const lines = text.trim().split('\n');
   var result = indent + "/**\n";
-  var lines = wrapComments(text).split('\n');
-  for (i = 0; i < lines.length; i++) {
-    var line = lines[i];
-    if (line.length > 0) {
-      result += indent + " * " + line + '\n';
-    }
-  }
-  result += indent + " */\n" + indent;
+  lines.forEach(line => {
+    result += indent + " *" + (line === '' ? '' : ' ' + line) + "\n";
+  });
+  result += indent + " */\n " + indent;
   return result;
 }
 
@@ -909,12 +902,28 @@ function processServices(swagger, models, options) {
       }
       var operationResponses = processResponses(def, path, models);
       var resultType = operationResponses.resultType;
-      var docString = def.description || "";
+      var docString = (def.description || "").trim();
       if (paramsClass == null) {
         for (i = 0; i < operationParameters.length; i++) {
           param = operationParameters[i];
-          docString += "\n@param " + param.paramName + " - " +
+          docString += "\n@param " + param.paramName + " " +
             param.paramDescription;
+        }
+      } else {
+        docString += "\n@param params The `" + descriptor.serviceClass +
+          "." + paramsClass + "` containing the following parameters:\n";
+        for (i = 0; i < operationParameters.length; i++) {
+          param = operationParameters[i];
+          docString += "\n- `" + param.paramName + "`: ";
+          var lines = (param.paramDescription || "").trim().split("\n");
+          for (var l = 0; l < lines.length; l++) {
+            var line = lines[l];
+            if (line === "") {
+              docString += "\n";
+            } else {
+              docString += (l == 0 ? "" : "  ") + line + "\n";
+            }
+          }
         }
       }
       if (operationResponses.resultDescription) {

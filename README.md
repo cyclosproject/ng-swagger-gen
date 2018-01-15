@@ -59,9 +59,8 @@ Here are a few notes:
 
 ## Requirements
 The generator itself has very few requirements, basically
-[argparse](https://www.npmjs.com/package/argparse),
-[mustache](https://www.npmjs.com/package/mustache) and
-[linewrap](https://www.npmjs.com/package/linewrap).
+[argparse](https://www.npmjs.com/package/argparse) and
+[mustache](https://www.npmjs.com/package/mustache).
 
 However, the generated code requires:
 

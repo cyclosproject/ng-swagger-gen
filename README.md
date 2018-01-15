@@ -59,8 +59,10 @@ Here are a few notes:
 
 ## Requirements
 The generator itself has very few requirements, basically
-[argparse](https://www.npmjs.com/package/argparse) and
-[mustache](https://www.npmjs.com/package/mustache).
+[argparse](https://www.npmjs.com/package/argparse),
+[mustache](https://www.npmjs.com/package/mustache) and
+[linewrap](https://www.npmjs.com/package/linewrap).
+
 However, the generated code requires:
 
 - **@angular/core**: Angular version **4.3.0 or higher** is required, because

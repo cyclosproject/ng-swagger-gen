@@ -1,5 +1,4 @@
-{{{modelComments}}}
-export type {{modelClass}} = {{#modelEnumValues}}
+{{{modelComments}}}export type {{modelClass}} = {{#modelEnumValues}}
   "{{enumValue}}"{{^enumIsLast}} |{{/enumIsLast}}{{/modelEnumValues}};
 
 export module {{modelClass}} {

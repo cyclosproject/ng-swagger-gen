@@ -6,6 +6,10 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const Mustache = require('mustache');
+const linewrap = require('linewrap');
+const wrapComments = linewrap(78, {
+  lineBreak: '\n'
+});
 
 /**
  * Main generate function
@@ -400,15 +404,18 @@ function toComments(text, level) {
   for (i = 0; i < level; i++) {
     indent += "  ";
   }
+  if (text == null || text.length === 0) {
+    return indent;
+  }
   var result = indent + "/**\n";
-  var lines = (text || "").split("\n");
+  var lines = wrapComments(text).split('\n');
   for (i = 0; i < lines.length; i++) {
     var line = lines[i];
     if (line.length > 0) {
-      result += indent + " * " + line + "\n";
+      result += indent + " * " + line + '\n';
     }
   }
-  result += indent + " */";
+  result += indent + " */\n" + indent;
   return result;
 }
 
@@ -680,7 +687,7 @@ function processProperties(swagger, properties, requiredProperties) {
     var property = properties[name];
     var descriptor = {
       "propertyName": name,
-      "propertyComments": toComments(property.description),
+      "propertyComments": toComments(property.description, 1),
       "propertyRequired": requiredProperties.indexOf(name) >= 0,
       "propertyType": propertyType(property)
     };
@@ -724,6 +731,7 @@ function processResponses(def, path, models) {
     if (/2\d\d/.test(code)) {
       // Successful response
       operationResponses.resultType = type;
+      operationResponses.resultDescription = response.description;
       var headers = response.headers || {};
       for (var prop in headers) {
         // This operation returns at least one header
@@ -852,8 +860,12 @@ function processServices(swagger, models, options) {
 
       var parameters = def.parameters || [];
 
-      var paramsClass = parameters.length < minParamsForContainer ?
-        null : id.charAt(0).toUpperCase() + id.substr(1) + "Params";
+      var paramsClass = null;
+      var paramsClassComments = null;
+      if (parameters.length >= minParamsForContainer) {
+        paramsClass = id.charAt(0).toUpperCase() + id.substr(1) + "Params";
+        paramsClassComments = toComments("Parameters for " + id, 1);
+      }
 
       var operationParameters = [];
       for (var p = 0; p < parameters.length; p++) {
@@ -880,7 +892,7 @@ function processServices(swagger, models, options) {
           paramIsBody: param.in === 'body',
           paramIsArray: param.type === 'array',
           paramDescription: param.description,
-          paramComments: toComments(param.description, 1),
+          paramComments: toComments(param.description, 2),
           paramType: paramType,
           paramCollectionFormat: param.collectionFormat
         };
@@ -898,14 +910,20 @@ function processServices(swagger, models, options) {
       var operationResponses = processResponses(def, path, models);
       var resultType = operationResponses.resultType;
       var docString = def.description || "";
-      for (i = 0; i < operationParameters.length; i++) {
-        param = operationParameters[i];
-        docString += "\n@param " + param.paramName + " - " +
-          param.paramDescription;
+      if (paramsClass == null) {
+        for (i = 0; i < operationParameters.length; i++) {
+          param = operationParameters[i];
+          docString += "\n@param " + param.paramName + " - " +
+            param.paramDescription;
+        }
+      }
+      if (operationResponses.resultDescription) {
+        docString += "\n@return " + operationResponses.resultDescription;
       }
       var operation = {
         operationName: id,
         operationParamsClass: paramsClass,
+        operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),
         operationPath: url,
         operationPathExpression: toPathExpression(paramsClass, url),
@@ -937,6 +955,18 @@ function processServices(swagger, models, options) {
         operation.operationIsBoolean || operation.operationIsEnum ||
         operation.operationIsObject || operation.operationIsPrimitiveArray);
       descriptor.serviceOperations.push(operation);
+    }
+  }
+
+  // Read the comments of each tag to use for service comments
+  if (swagger.tags && swagger.tags.length > 0) {
+    for (i = 0; i < swagger.tags.length; i++) {
+      const tag = swagger.tags[i];
+      const name = tagName(tag.name);
+      const service = services[name];
+      if (service && tag.description) {
+        service.serviceComments = toComments(tag.description);
+      }
     }
   }
 

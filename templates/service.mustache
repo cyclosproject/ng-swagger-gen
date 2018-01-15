@@ -12,8 +12,7 @@ import { filter } from 'rxjs/operators/filter';
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
 
-{{{serviceComments}}}
-@Injectable()
+{{{serviceComments}}}@Injectable()
 export class {{serviceClass}} extends BaseService {
   constructor(
     config: ApiConfiguration,
@@ -28,8 +27,12 @@ export class {{serviceClass}} extends BaseService {
 }
 
 export module {{serviceClass}} {
-{{#serviceOperations}}{{#operationParamsClass}}  export interface {{operationParamsClass}} {
-{{#operationParameters}}    {{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType}};
+{{#serviceOperations}}{{#operationParamsClass}}
+
+{{{operationParamsClassComments}}}export interface {{operationParamsClass}} {
+{{#operationParameters}}
+
+{{{paramComments}}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType}};
 {{/operationParameters}}
   }
 {{/operationParamsClass}}{{/serviceOperations}}

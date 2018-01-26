@@ -156,6 +156,14 @@ of the JSON schema on `./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json`
 It is also possible to use the online version at
 `https://github.com/cyclosproject/ng-swagger-gen/blob/master/ng-swagger-gen-schema.json`.
 
+It is also possible to specify the configuration file to use. This is useful
+when multiple APIs are generated. To specify a configuration file, use the 
+argument `--config` or its short form, `-c`, like this:
+
+```bash
+ng-swagger-gen --config custom-config.json
+```
+
 ### Generating the configuration file
 To generate a configuration file, run the following in the root folder of
 your project;
@@ -234,6 +242,17 @@ following `scripts` to your `package.json`:
 ```
 This way whenever you run `npm start` or `npm run build`, the API classes
 will be generated before actually serving / building your application.
+
+Also, if you use several configuration files, you can specify multiple times
+the call to `ng-swagger-gen`, like:
+```json
+{
+  "scripts": {
+    "start": "ng-swagger-gen -c api1.json && ng-swagger-gen -c api2.json && ng serve",
+    "build": "ng-swagger-gen -c api1.json && ng-swagger-gen -c api2.json && ng build -prod"
+  }
+}
+```
 
 ## Swagger extensions
 The swagger specification doesn't allow referencing an enumeration to be used

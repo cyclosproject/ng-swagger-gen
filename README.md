@@ -254,6 +254,49 @@ the call to `ng-swagger-gen`, like:
 }
 ```
 
+## Specifying the root URL / web service endpoint
+The easiest way to specify a custom root URL (web service endpoint URL) is to
+inject the `ApiConfiguration` instance in some service and set the `rootUrl`
+property from there. 
+
+Alternatively, define a provider for `APP_INITIALIZER` in your root module,
+like this:
+
+```typescript
+export function initApiConfiguration(config: ApiConfiguration): Function {
+  return () => {
+    config.rootUrl = 'https://some-root-url.com';
+  };
+}
+export const INIT_API_CONFIGURATION: Provider = {
+  provide: APP_INITIALIZER,
+  useFactory: initApiConfiguration,
+  deps: [ApiConfiguration],
+  multi: true
+};
+
+/**
+ * Then declare the provider. In this example, the AppModule is also
+ * importing the ApiModule, which is important to get access to the
+ * generated services
+ */
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    ApiModule
+  ],
+  providers: [
+    INIT_API_CONFIGURATION
+  ],
+  bootstrap: [
+    AppComponent
+  ]
+})
+export class AppModule { }
+```
+
 ## Swagger extensions
 The swagger specification doesn't allow referencing an enumeration to be used
 as an operation parameter. Hence, `ng-swagger-gen` supports the vendor

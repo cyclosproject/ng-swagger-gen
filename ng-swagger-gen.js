@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const fs = require('fs');
 const url = require('url');
@@ -6,6 +6,7 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const Mustache = require('mustache');
+const $RefParser = require('json-schema-ref-parser');
 
 /**
  * Main generate function
@@ -16,75 +17,33 @@ function ngSwaggerGen(options) {
     process.exit(1);
   }
 
-  var u = url.parse(options.swagger);
-  var isHttp = u.protocol === 'http:';
-  var isHttps = u.protocol === 'https:';
-  if (isHttp || isHttps) {
-    // The swagger definition is an HTTP(S) URL - fetch it
-    (isHttp ? http : https).get(options.swagger, (res) => {
-      const statusCode = res.statusCode;
-      const contentType = res.headers['content-type'];
-
-      if (statusCode !== 200) {
-        console.error("Server responded with status code " + statusCode +
-          " the request to " + options.swagger);
-        process.exit(1);
-      }
-
-      res.setEncoding('utf8');
-      var data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => {
-        // Proceed with the generation
-        doGenerate(data, options);
-      });
-    }).on('error', (err) => {
-      console.error("Error reading swagger JSON URL " + options.swagger +
-        ": " + err.message);
-      process.exit(1);
-    });
-  } else {
-    // The swagger definition is a local file
-    if (!fs.existsSync(options.swagger)) {
-      console.error("Swagger definition file doesn't exist: " +
-        options.swagger);
-      process.exit(1);
+  $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
+    data => {
+      doGenerate(data, options);
+    },
+    err => {
+      console.error(
+        `Error reading swagger location ${options.swagger}: ${err}`
+      );
     }
-    fs.readFile(options.swagger, "UTF-8", (err, data) => {
-      if (err) {
-        console.error("Error reading swagger JSON file " + options.swagger +
-          ": " + err.message);
-        process.exit(1);
-      } else {
-        // Proceed with the generation
-        doGenerate(data, options);
-      }
-    });
-  }
+  );
 }
 
 /**
- * Proceedes with the generation given the swagger descriptor content
+ * Proceedes with the generation given the parsed swagger object
  */
-function doGenerate(swaggerContent, options) {
+function doGenerate(swagger, options) {
   if (!options.templates) {
     options.templates = path.join(__dirname, 'templates');
   }
 
   var output = options.output || 'src/app/api';
 
-  // Strip out the UTF-BOM if present
-  swaggerContent = swaggerContent.replace(/^\uFEFF/, '');
-
-  // Proceed with the JSON parsing
-  var swagger = JSON.parse(swaggerContent);
-  if (typeof swagger != 'object') {
-    console.error("Invalid swagger content");
-    process.exit(1);
-  }
   if (swagger.swagger !== '2.0') {
-    console.error("Invalid swagger specification. Must be a 2.0. Currently " +
-      swagger.swagger);
+    console.error(
+      'Invalid swagger specification. Must be a 2.0. Currently ' +
+        swagger.swagger
+    );
     process.exit(1);
   }
   swagger.paths = swagger.paths || {};
@@ -96,19 +55,19 @@ function doGenerate(swaggerContent, options) {
   // but still can remove unused models
   const includeTags = options.includeTags;
   if (typeof includeTags == 'string') {
-    options.includeTags = includeTags.split(",");
+    options.includeTags = includeTags.split(',');
   }
   const excludeTags = options.excludeTags;
   if (typeof excludeTags == 'string') {
-    options.excludeTags = excludeTags.split(",");
+    options.excludeTags = excludeTags.split(',');
   }
   applyTagFilter(models, services, options);
 
   // Read the templates
   var templates = {};
   var files = fs.readdirSync(options.templates);
-  files.forEach(function (file, index) {
-    var pos = file.indexOf(".mustache");
+  files.forEach(function(file, index) {
+    var pos = file.indexOf('.mustache');
     if (pos >= 0) {
       var fullFile = path.join(options.templates, file);
       templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
@@ -124,10 +83,10 @@ function doGenerate(swaggerContent, options) {
   var removeStaleFiles = options.removeStaleFiles !== false;
 
   // Utility function to render a template and write it to a file
-  var generate = function (template, model, file) {
+  var generate = function(template, model, file) {
     var code = Mustache.render(template, model, templates);
-    fs.writeFileSync(file, code, "UTF-8");
-    console.info("Wrote " + file);
+    fs.writeFileSync(file, code, 'UTF-8');
+    console.info('Wrote ' + file);
   };
 
   // Write the models
@@ -135,8 +94,11 @@ function doGenerate(swaggerContent, options) {
   for (var modelName in models) {
     var model = models[modelName];
     modelsArray.push(model);
-    generate(templates.model, model,
-      modelsOutput + "/" + model.modelFile + ".ts");
+    generate(
+      templates.model,
+      model,
+      modelsOutput + '/' + model.modelFile + '.ts'
+    );
   }
   if (modelsArray.length > 0) {
     modelsArray[modelsArray.length - 1].modelIsLast = true;
@@ -160,9 +122,9 @@ function doGenerate(swaggerContent, options) {
   }
 
   // Write the model index
-  var modelIndexFile = output + "/models.ts";
+  var modelIndexFile = output + '/models.ts';
   if (options.modelIndex !== false) {
-    generate(templates.models, { "models": modelsArray }, modelIndexFile);
+    generate(templates.models, { models: modelsArray }, modelIndexFile);
   } else if (removeStaleFiles) {
     rmIfExists(modelIndexFile);
   }
@@ -173,8 +135,11 @@ function doGenerate(swaggerContent, options) {
     var service = services[serviceName];
     service.generalErrorHandler = options.errorHandler !== false;
     servicesArray.push(service);
-    generate(templates.service, service,
-      servicesOutput + "/" + service.serviceFile + ".ts");
+    generate(
+      templates.service,
+      service,
+      servicesOutput + '/' + service.serviceFile + '.ts'
+    );
   }
   if (servicesArray.length > 0) {
     servicesArray[servicesArray.length - 1].serviceIsLast = true;
@@ -198,19 +163,17 @@ function doGenerate(swaggerContent, options) {
   }
 
   // Write the service index
-  var serviceIndexFile = output + "/services.ts";
+  var serviceIndexFile = output + '/services.ts';
   if (options.serviceIndex !== false) {
-    generate(templates.services, { "services": servicesArray },
-      serviceIndexFile);
+    generate(templates.services, { services: servicesArray }, serviceIndexFile);
   } else if (removeStaleFiles) {
     rmIfExists(serviceIndexFile);
   }
 
   // Write the api module
-  var apiModuleFile = output + "/api.module.ts";
+  var apiModuleFile = output + '/api.module.ts';
   if (options.apiModule !== false) {
-    generate(templates.apiModule, { "services": servicesArray },
-      apiModuleFile);
+    generate(templates.apiModule, { services: servicesArray }, apiModuleFile);
   } else if (removeStaleFiles) {
     rmIfExists(apiModuleFile);
   }
@@ -219,20 +182,22 @@ function doGenerate(swaggerContent, options) {
   {
     var schemes = swagger.schemes || [];
     var scheme = schemes.length == 0 ? 'http' : schemes[0];
-    var host = (swagger.host || "localhost");
-    var basePath = (swagger.basePath || "/");
-    var rootUrl = scheme + "://" + host + basePath;
+    var host = swagger.host || 'localhost';
+    var basePath = swagger.basePath || '/';
+    var rootUrl = scheme + '://' + host + basePath;
     var context = {
-      "rootUrl": rootUrl
+      rootUrl: rootUrl,
     };
-    generate(templates.apiConfiguration, context,
-      output + "/api-configuration.ts");
+    generate(
+      templates.apiConfiguration,
+      context,
+      output + '/api-configuration.ts'
+    );
   }
 
   // Write the BaseService
   {
-    generate(templates.baseService, {},
-      output + "/base-service.ts");
+    generate(templates.baseService, {}, output + '/base-service.ts');
   }
 }
 
@@ -265,12 +230,14 @@ function applyTagFilter(models, services, options) {
   var usedModels = new Set();
   const addToUsed = (dep, index) => usedModels.add(dep);
   for (var serviceName in services) {
-    var include = (!included || included.indexOf(serviceName) >= 0) &&
+    var include =
+      (!included || included.indexOf(serviceName) >= 0) &&
       (!excluded || excluded.indexOf(serviceName) < 0);
     if (!include) {
       // This service is skipped - remove it
-      console.info("Ignoring service " + serviceName +
-        " because it was not included");
+      console.info(
+        'Ignoring service ' + serviceName + ' because it was not included'
+      );
       delete services[serviceName];
     } else if (ignoreUnusedModels) {
       // Collect the models used by this service
@@ -282,15 +249,19 @@ function applyTagFilter(models, services, options) {
   if (ignoreUnusedModels) {
     // Collect the model dependencies of models, so unused can be removed
     var allDependencies = new Set();
-    usedModels.forEach(
-      dep => collectDependencies(allDependencies, dep, models));
+    usedModels.forEach(dep =>
+      collectDependencies(allDependencies, dep, models)
+    );
 
     // Remove all models that are unused
     for (var modelName in models) {
       if (!allDependencies.has(modelName)) {
         // This model is not used - remove it
-        console.info("Ignoring model " + modelName +
-          " because it was not used by any service");
+        console.info(
+          'Ignoring model ' +
+            modelName +
+            ' because it was not used by any service'
+        );
         delete models[modelName];
       }
     }
@@ -307,7 +278,8 @@ function collectDependencies(dependencies, model, models) {
   dependencies.add(model.modelName);
   if (model.modelDependencies) {
     model.modelDependencies.forEach((dep, index) =>
-      collectDependencies(dependencies, dep, models));
+      collectDependencies(dependencies, dep, models)
+    );
   }
 }
 
@@ -335,7 +307,7 @@ function mkdirs(folderPath, mode) {
  */
 function rmIfExists(file) {
   if (fs.existsSync(file)) {
-    console.info("Removing stale file " + file);
+    console.info('Removing stale file ' + file);
     fs.unlinkSync(file);
   }
 }
@@ -344,13 +316,13 @@ function rmIfExists(file) {
  * Converts a given type name into a TS file name
  */
 function toFileName(typeName) {
-  var result = "";
+  var result = '';
   var wasLower = false;
   for (var i = 0; i < typeName.length; i++) {
     var c = typeName.charAt(i);
     var isLower = /[a-z]/.test(c);
     if (!isLower && wasLower) {
-      result += "-";
+      result += '-';
     }
     result += c.toLowerCase();
     wasLower = isLower;
@@ -374,16 +346,16 @@ function simpleRef(ref) {
 }
 
 /**
-* Converts a given enum value into the enum name
-*/
+ * Converts a given enum value into the enum name
+ */
 function toEnumName(value) {
-  var result = "";
+  var result = '';
   var wasLower = false;
   for (var i = 0; i < value.length; i++) {
     var c = value.charAt(i);
     var isLower = /[a-z]/.test(c);
     if (!isLower && wasLower) {
-      result += "_";
+      result += '_';
     }
     result += c.toUpperCase();
     wasLower = isLower;
@@ -395,20 +367,20 @@ function toEnumName(value) {
  * Returns a multi-line comment for the given text
  */
 function toComments(text, level) {
-  var indent = "";
+  var indent = '';
   var i;
   for (i = 0; i < level; i++) {
-    indent += "  ";
+    indent += '  ';
   }
   if (text == null || text.length === 0) {
     return indent;
   }
   const lines = text.trim().split('\n');
-  var result = indent + "/**\n";
+  var result = indent + '/**\n';
   lines.forEach(line => {
-    result += indent + " *" + (line === '' ? '' : ' ' + line) + "\n";
+    result += indent + ' *' + (line === '' ? '' : ' ' + line) + '\n';
   });
-  result += indent + " */\n " + indent;
+  result += indent + ' */\n ' + indent;
   return result;
 }
 
@@ -424,7 +396,7 @@ function DependenciesResolver(models, ownType) {
 /**
  * Adds a candidate dependency
  */
-DependenciesResolver.prototype.add = function (dep) {
+DependenciesResolver.prototype.add = function(dep) {
   dep = removeBrackets(dep);
   if (this.dependencyNames.indexOf(dep) < 0 && dep !== this.ownType) {
     var depModel = this.models[dep];
@@ -437,7 +409,7 @@ DependenciesResolver.prototype.add = function (dep) {
 /**
  * Returns the resolved dependencies as a list of models
  */
-DependenciesResolver.prototype.get = function () {
+DependenciesResolver.prototype.get = function() {
   return this.dependencies;
 };
 
@@ -463,15 +435,15 @@ function processModels(swagger, options) {
     } else if (model.type === 'string') {
       enumValues = model.enum || [];
       if (enumValues.length == 0) {
-        simpleType = "string";
+        simpleType = 'string';
         enumValues = null;
       } else {
         for (i = 0; i < enumValues.length; i++) {
           var enumValue = enumValues[i];
           var enumDescriptor = {
-            "enumName": toEnumName(enumValue),
-            "enumValue": enumValue,
-            "enumIsLast": i === enumValues.length - 1
+            enumName: toEnumName(enumValue),
+            enumValue: enumValue,
+            enumIsLast: i === enumValues.length - 1,
           };
           enumValues[i] = enumDescriptor;
         }
@@ -495,11 +467,13 @@ function processModels(swagger, options) {
       modelIsArray: elementType != null,
       modelIsSimple: simpleType != null,
       modelSimpleType: simpleType,
-      properties: properties == null ? null :
-        processProperties(swagger, properties, requiredProperties),
+      properties:
+        properties == null
+          ? null
+          : processProperties(swagger, properties, requiredProperties),
       modelEnumValues: enumValues,
       modelElementType: elementType,
-      modelSubclasses: []
+      modelSubclasses: [],
     };
 
     if (descriptor.properties != null) {
@@ -509,12 +483,14 @@ function processModels(swagger, options) {
         descriptor.modelProperties.push(property);
       }
       descriptor.modelProperties.sort((a, b) => {
-        return a.modelName < b.modelName ?
-          -1 : a.modelName > b.modelName ? 1 : 0;
+        return a.modelName < b.modelName
+          ? -1
+          : a.modelName > b.modelName ? 1 : 0;
       });
       if (descriptor.modelProperties.length > 0) {
-        descriptor.modelProperties[descriptor.modelProperties.length - 1]
-          .propertyIsLast = true;
+        descriptor.modelProperties[
+          descriptor.modelProperties.length - 1
+        ].propertyIsLast = true;
       }
     }
 
@@ -594,10 +570,10 @@ function processModels(swagger, options) {
  * A special case is for inline objects. In this case, the result is "object".
  */
 function removeBrackets(type) {
-  if (typeof type == "object") {
-    return "object";
+  if (typeof type == 'object') {
+    return 'object';
   }
-  var pos = (type || "").indexOf("[");
+  var pos = (type || '').indexOf('[');
   return pos >= 0 ? type.substr(0, pos) : type;
 }
 
@@ -607,32 +583,32 @@ function removeBrackets(type) {
 function propertyType(property) {
   var type;
   if (property == null) {
-    return "void";
+    return 'void';
   } else if (property.$ref != null) {
     // Type is a reference
     return simpleRef(property.$ref);
-  } else if (property["x-type"]) {
+  } else if (property['x-type']) {
     // Type is read from the x-type vendor extension
-    type = (property["x-type"] || "").toString().replace("List<", "Array<");
-    var pos = type.indexOf("Array<");
+    type = (property['x-type'] || '').toString().replace('List<', 'Array<');
+    var pos = type.indexOf('Array<');
     if (pos >= 0) {
-      type = type.substr("Array<".length, type.length);
-      type = type.substr(0, type.length - 1) + "[]";
+      type = type.substr('Array<'.length, type.length);
+      type = type.substr(0, type.length - 1) + '[]';
     }
     return type.length == 0 ? 'void' : type;
   }
   switch (property.type) {
-    case "string":
-      return "string";
-    case "array":
-      return propertyType(property.items) + "[]";
-    case "integer":
-    case "number":
-      return "number";
-    case "boolean":
-      return "boolean";
-    case "object":
-      var def = "{";
+    case 'string':
+      return 'string';
+    case 'array':
+      return propertyType(property.items) + '[]';
+    case 'integer':
+    case 'number':
+      return 'number';
+    case 'boolean':
+      return 'boolean';
+    case 'object':
+      var def = '{';
       var first = true;
       var allTypes = [];
       if (property.properties) {
@@ -641,32 +617,32 @@ function propertyType(property) {
           if (first) {
             first = false;
           } else {
-            def += ", ";
+            def += ', ';
           }
           type = propertyType(prop);
           if (allTypes.indexOf(type) < 0) {
             allTypes.push(type);
           }
-          def += name + ": " + type;
+          def += name + ': ' + type;
         }
       }
       if (property.additionalProperties) {
         if (!first) {
-          def += ", ";
+          def += ', ';
         }
         type = propertyType(property.additionalProperties);
         if (allTypes.indexOf(type) < 0) {
           allTypes.push(type);
         }
-        def += "[key: string]: " + type;
+        def += '[key: string]: ' + type;
       }
-      def += "}";
+      def += '}';
       return {
         allTypes: allTypes,
-        toString: () => def
+        toString: () => def,
       };
     default:
-      return "any";
+      return 'any';
   }
 }
 
@@ -679,10 +655,10 @@ function processProperties(swagger, properties, requiredProperties) {
   for (var name in properties) {
     var property = properties[name];
     var descriptor = {
-      "propertyName": name,
-      "propertyComments": toComments(property.description, 1),
-      "propertyRequired": requiredProperties.indexOf(name) >= 0,
-      "propertyType": propertyType(property)
+      propertyName: name,
+      propertyComments: toComments(property.description, 1),
+      propertyRequired: requiredProperties.indexOf(name) >= 0,
+      propertyType: propertyType(property),
     };
     result[name] = descriptor;
   }
@@ -693,11 +669,11 @@ function processProperties(swagger, properties, requiredProperties) {
  * Resolves a local reference in the given swagger file
  */
 function resolveRef(swagger, ref) {
-  if (ref.indexOf("#/") != 0) {
-    console.error("Resolved references must start with #/. Current: " + ref);
+  if (ref.indexOf('#/') != 0) {
+    console.error('Resolved references must start with #/. Current: ' + ref);
     process.exit(1);
   }
-  var parts = ref.substr(2).split("/");
+  var parts = ref.substr(2).split('/');
   var result = swagger;
   for (var i = 0; i < parts.length; i++) {
     var part = parts[i];
@@ -733,8 +709,8 @@ function processResponses(def, path, models) {
       }
     }
     operationResponses[code] = {
-      "code": code,
-      "type": type
+      code: code,
+      type: type,
     };
   }
   if (!operationResponses.resultType) {
@@ -749,15 +725,15 @@ function processResponses(def, path, models) {
  * if there is a parameters class, or "/a/${var1}/b/${var2}" otherwise.
  */
 function toPathExpression(paramsClass, path) {
-  var repl = paramsClass == null ? "$${" : "$${params.";
-  return (path || "").replace(/\{/g, repl);
+  var repl = paramsClass == null ? '$${' : '$${params.';
+  return (path || '').replace(/\{/g, repl);
 }
 
 /**
  * Transforms the given string into a valid identifier
  */
 function toIdentifier(string) {
-  var result = "";
+  var result = '';
   var wasSep = false;
   for (var i = 0; i < string.length; i++) {
     var c = string.charAt(i);
@@ -780,10 +756,10 @@ function toIdentifier(string) {
  */
 function tagName(tag, options) {
   if (tag == null || tag === '') {
-    tag = options.defaultTag || "Api";
+    tag = options.defaultTag || 'Api';
   }
   tag = toIdentifier(tag);
-  return tag.charAt(0).toUpperCase() + (tag.length == 1 ? "" : tag.substr(1));
+  return tag.charAt(0).toUpperCase() + (tag.length == 1 ? '' : tag.substr(1));
 }
 
 /**
@@ -807,12 +783,28 @@ function operationId(given, method, url, allKnown) {
     id = id + '_' + i;
   }
   if (generate) {
-    console.warn("Operation '" + method + "' on '" + url +
-      "' defines no operationId. Assuming '" + id + "'.");
+    console.warn(
+      "Operation '" +
+        method +
+        "' on '" +
+        url +
+        "' defines no operationId. Assuming '" +
+        id +
+        "'."
+    );
   } else if (duplicated) {
-    console.warn("Operation '" + method + "' on '" + url +
-      "' defines a duplicated operationId: " + given + ". " +
-      "Assuming '" + id + "'.");
+    console.warn(
+      "Operation '" +
+        method +
+        "' on '" +
+        url +
+        "' defines a duplicated operationId: " +
+        given +
+        '. ' +
+        "Assuming '" +
+        id +
+        "'."
+    );
   }
   allKnown.add(id);
   return id;
@@ -829,7 +821,7 @@ function processServices(swagger, models, options) {
   var minParamsForContainer = options.minParamsForContainer || 2;
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
-    for (var method in (path || {})) {
+    for (var method in path || {}) {
       var def = path[method];
       if (!def) {
         continue;
@@ -840,24 +832,28 @@ function processServices(swagger, models, options) {
       if (descriptor == null) {
         descriptor = {
           serviceName: tag,
-          serviceClass: tag + "Service",
-          serviceFile: toFileName(tag) + ".service",
+          serviceClass: tag + 'Service',
+          serviceFile: toFileName(tag) + '.service',
           operationIds: new Set(),
-          serviceOperations: []
+          serviceOperations: [],
         };
         services[tag] = descriptor;
       }
 
-      var id = operationId(def.operationId, method, url,
-        descriptor.operationIds);
+      var id = operationId(
+        def.operationId,
+        method,
+        url,
+        descriptor.operationIds
+      );
 
       var parameters = def.parameters || [];
 
       var paramsClass = null;
       var paramsClassComments = null;
       if (parameters.length >= minParamsForContainer) {
-        paramsClass = id.charAt(0).toUpperCase() + id.substr(1) + "Params";
-        paramsClassComments = toComments("Parameters for " + id, 1);
+        paramsClass = id.charAt(0).toUpperCase() + id.substr(1) + 'Params';
+        paramsClassComments = toComments('Parameters for ' + id, 1);
       }
 
       var operationParameters = [];
@@ -877,7 +873,7 @@ function processServices(swagger, models, options) {
           paramName: param.name,
           paramIn: param.in,
           paramVar: paramVar,
-          paramFullVar: (paramsClass == null ? "" : "params.") + paramVar,
+          paramFullVar: (paramsClass == null ? '' : 'params.') + paramVar,
           paramRequired: param.required === true || param.in === 'path',
           paramIsQuery: param.in === 'query',
           paramIsPath: param.in === 'path',
@@ -887,47 +883,52 @@ function processServices(swagger, models, options) {
           paramDescription: param.description,
           paramComments: toComments(param.description, 2),
           paramType: paramType,
-          paramCollectionFormat: param.collectionFormat
+          paramCollectionFormat: param.collectionFormat,
         };
         operationParameters.push(paramDescriptor);
       }
       operationParameters.sort((a, b) => {
         if (a.paramRequired && !b.paramRequired) return -1;
         if (!a.paramRequired && b.paramRequired) return 1;
-        return a.paramName > b.paramName ?
-          -1 : a.paramName < b.paramName ? 1 : 0;
+        return a.paramName > b.paramName
+          ? -1
+          : a.paramName < b.paramName ? 1 : 0;
       });
       if (operationParameters.length > 0) {
         operationParameters[operationParameters.length - 1].paramIsLast = true;
       }
       var operationResponses = processResponses(def, path, models);
       var resultType = operationResponses.resultType;
-      var docString = (def.description || "").trim();
+      var docString = (def.description || '').trim();
       if (paramsClass == null) {
         for (i = 0; i < operationParameters.length; i++) {
           param = operationParameters[i];
-          docString += "\n@param " + param.paramName + " " +
-            param.paramDescription;
+          docString +=
+            '\n@param ' + param.paramName + ' ' + param.paramDescription;
         }
       } else {
-        docString += "\n@param params The `" + descriptor.serviceClass +
-          "." + paramsClass + "` containing the following parameters:\n";
+        docString +=
+          '\n@param params The `' +
+          descriptor.serviceClass +
+          '.' +
+          paramsClass +
+          '` containing the following parameters:\n';
         for (i = 0; i < operationParameters.length; i++) {
           param = operationParameters[i];
-          docString += "\n- `" + param.paramName + "`: ";
-          var lines = (param.paramDescription || "").trim().split("\n");
+          docString += '\n- `' + param.paramName + '`: ';
+          var lines = (param.paramDescription || '').trim().split('\n');
           for (var l = 0; l < lines.length; l++) {
             var line = lines[l];
-            if (line === "") {
-              docString += "\n";
+            if (line === '') {
+              docString += '\n';
             } else {
-              docString += (l == 0 ? "" : "  ") + line + "\n";
+              docString += (l == 0 ? '' : '  ') + line + '\n';
             }
           }
         }
       }
       if (operationResponses.resultDescription) {
-        docString += "\n@return " + operationResponses.resultDescription;
+        docString += '\n@return ' + operationResponses.resultDescription;
       }
       var operation = {
         operationName: id,
@@ -939,7 +940,7 @@ function processServices(swagger, models, options) {
         operationResultType: resultType,
         operationComments: toComments(docString, 1),
         operationParameters: operationParameters,
-        operationResponses: operationResponses
+        operationResponses: operationResponses,
       };
       var modelResult = models[removeBrackets(resultType)];
       var actualType = resultType;
@@ -953,16 +954,25 @@ function processServices(swagger, models, options) {
       operation.operationIsBoolean = actualType === 'boolean';
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
-      operation.operationIsPrimitiveArray = !modelResult &&
-        resultType.toString().indexOf('[]') >= 0;
-      operation.operationResponseType = operation.operationIsVoid ||
-        operation.operationIsString || operation.operationIsNumber ||
-        operation.operationIsBoolean || operation.operationIsEnum ?
-        'text' : 'json';
-      operation.operationIsUnknown = !(operation.operationIsVoid ||
-        operation.operationIsString || operation.operationIsNumber ||
-        operation.operationIsBoolean || operation.operationIsEnum ||
-        operation.operationIsObject || operation.operationIsPrimitiveArray);
+      operation.operationIsPrimitiveArray =
+        !modelResult && resultType.toString().indexOf('[]') >= 0;
+      operation.operationResponseType =
+        operation.operationIsVoid ||
+        operation.operationIsString ||
+        operation.operationIsNumber ||
+        operation.operationIsBoolean ||
+        operation.operationIsEnum
+          ? 'text'
+          : 'json';
+      operation.operationIsUnknown = !(
+        operation.operationIsVoid ||
+        operation.operationIsString ||
+        operation.operationIsNumber ||
+        operation.operationIsBoolean ||
+        operation.operationIsEnum ||
+        operation.operationIsObject ||
+        operation.operationIsPrimitiveArray
+      );
       descriptor.serviceOperations.push(operation);
     }
   }

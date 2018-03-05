@@ -20,5 +20,8 @@
   },
   "bin": {
     "ng-swagger-gen": "./ng-swagger-gen"
+  },
+  "devDependencies": {
+    "json-schema-ref-parser": "^4.1.1"
   }
 }

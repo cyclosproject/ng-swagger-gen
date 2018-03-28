@@ -2,7 +2,7 @@ ng-swagger-gen: A Swagger 2.0 code generator for Angular 4.3+
 ---
 
 This project is a NPM module that generates model interfaces and web service
-clients from a [Swagger 2.0](http://swagger.io/) JSON
+clients from a [Swagger 2.0](http://swagger.io/)
 [specification](http://swagger.io/specification/).
 The generated classes follow the principles of Angular 4.3+ projects.
 
@@ -38,9 +38,6 @@ The design principles are:
 
 Here are a few notes:
 
-- The descriptor must be in JSON format. If you have your Swagger file in
-  YAML format, use the [online swagger editor](http://editor.swagger.io) to
-  export the descriptor as JSON;
 - Each operation is assumed to have a single tag. If none is declared, a default
   of `Api` (configurable) is assumed. If multiple tags are declared, the first
   one is used;
@@ -59,6 +56,7 @@ Here are a few notes:
 
 ## Requirements
 The generator itself has very few requirements, basically
+[json-schema-ref-parser](https://www.npmjs.com/package/json-schema-ref-parser),
 [argparse](https://www.npmjs.com/package/argparse) and
 [mustache](https://www.npmjs.com/package/mustache).
 

@@ -467,10 +467,8 @@ function processModels(swagger, options) {
       modelIsArray: elementType != null,
       modelIsSimple: simpleType != null,
       modelSimpleType: simpleType,
-      properties:
-        properties == null
-          ? null
-          : processProperties(swagger, properties, requiredProperties),
+      properties: properties == null ? null :
+        processProperties(swagger, properties, requiredProperties),
       modelEnumValues: enumValues,
       modelElementType: elementType,
       modelSubclasses: [],
@@ -483,9 +481,8 @@ function processModels(swagger, options) {
         descriptor.modelProperties.push(property);
       }
       descriptor.modelProperties.sort((a, b) => {
-        return a.modelName < b.modelName
-          ? -1
-          : a.modelName > b.modelName ? 1 : 0;
+        return a.modelName < b.modelName ? -1 :
+          a.modelName > b.modelName ? 1 : 0;
       });
       if (descriptor.modelProperties.length > 0) {
         descriptor.modelProperties[
@@ -890,9 +887,8 @@ function processServices(swagger, models, options) {
       operationParameters.sort((a, b) => {
         if (a.paramRequired && !b.paramRequired) return -1;
         if (!a.paramRequired && b.paramRequired) return 1;
-        return a.paramName > b.paramName
-          ? -1
-          : a.paramName < b.paramName ? 1 : 0;
+        return a.paramName > b.paramName ? -1 :
+          a.paramName < b.paramName ? 1 : 0;
       });
       if (operationParameters.length > 0) {
         operationParameters[operationParameters.length - 1].paramIsLast = true;
@@ -961,9 +957,7 @@ function processServices(swagger, models, options) {
         operation.operationIsString ||
         operation.operationIsNumber ||
         operation.operationIsBoolean ||
-        operation.operationIsEnum
-          ? 'text'
-          : 'json';
+        operation.operationIsEnum ? 'text' : 'json';
       operation.operationIsUnknown = !(
         operation.operationIsVoid ||
         operation.operationIsString ||

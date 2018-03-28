@@ -84,7 +84,8 @@ function doGenerate(swagger, options) {
 
   // Utility function to render a template and write it to a file
   var generate = function(template, model, file) {
-    var code = Mustache.render(template, model, templates);
+    var code = Mustache.render(template, model, templates)
+      .replace(/[^\S\r\n]+$/gm, '');
     fs.writeFileSync(file, code, 'UTF-8');
     console.info('Wrote ' + file);
   };
@@ -376,11 +377,11 @@ function toComments(text, level) {
     return indent;
   }
   const lines = text.trim().split('\n');
-  var result = indent + '/**\n';
+  var result = '\n' + indent + '/**\n';
   lines.forEach(line => {
     result += indent + ' *' + (line === '' ? '' : ' ' + line) + '\n';
   });
-  result += indent + ' */\n ' + indent;
+  result += indent + ' */\n' + indent;
   return result;
 }
 

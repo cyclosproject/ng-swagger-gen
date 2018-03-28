@@ -11,7 +11,6 @@ import { filter } from 'rxjs/operators/filter';
 
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
-
 {{{serviceComments}}}@Injectable()
 export class {{serviceClass}} extends BaseService {
   constructor(
@@ -20,18 +19,13 @@ export class {{serviceClass}} extends BaseService {
   ) {
     super(config, http);
   }
-{{#serviceOperations}}
-{{>operationResponse}}
-{{>operationBody}}
-{{/serviceOperations}}
+{{#serviceOperations}}{{>operationResponse}}{{>operationBody}}{{/serviceOperations}}
 }
 
 export module {{serviceClass}} {
 {{#serviceOperations}}{{#operationParamsClass}}
-
 {{{operationParamsClassComments}}}export interface {{operationParamsClass}} {
 {{#operationParameters}}
-
 {{{paramComments}}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType}};
 {{/operationParameters}}
   }

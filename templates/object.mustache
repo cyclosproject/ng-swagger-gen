@@ -1,6 +1,5 @@
 {{{modelComments}}}export interface {{modelClass}} {{#modelParent}}extends {{modelName}} {{/modelParent}}{
-  {{#modelProperties}}
-
+{{#modelProperties}}
 {{{propertyComments}}}{{propertyName}}{{^propertyRequired}}?{{/propertyRequired}}: {{propertyType}};
-  {{/modelProperties}}
+{{/modelProperties}}
 }

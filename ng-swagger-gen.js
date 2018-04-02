@@ -620,6 +620,8 @@ function propertyType(property) {
       return 'number';
     case 'boolean':
       return 'boolean';
+    case 'file':
+      return 'Blob';
     case 'object':
       var def = '{';
       var first = true;
@@ -892,7 +894,10 @@ function processServices(swagger, models, options) {
           paramIsPath: param.in === 'path',
           paramIsHeader: param.in === 'header',
           paramIsBody: param.in === 'body',
+          paramIsFormData: param.in === 'formData',
           paramIsArray: param.type === 'array',
+          paramToJson: param.in === 'formData' && paramType !== 'Blob' &&
+            paramType !== 'string',
           paramDescription: param.description,
           paramComments: toComments(param.description, 2),
           paramType: paramType,
@@ -911,6 +916,13 @@ function processServices(swagger, models, options) {
       }
       var operationResponses = processResponses(def, path, models);
       var resultType = operationResponses.resultType;
+      var isMultipart = false;
+      for (i = 0; i < operationParameters.length; i++) {
+        if (operationParameters[i].paramIsFormData) {
+          isMultipart = true;
+          break;
+        }
+      }
       var docString = (def.description || '').trim();
       if (paramsClass == null) {
         for (i = 0; i < operationParameters.length; i++) {
@@ -960,6 +972,7 @@ function processServices(swagger, models, options) {
         actualType = modelResult.modelSimpleType;
         var actualModel = models[removeBrackets(actualType)];
       }
+      operation.operationIsMultipart = isMultipart;
       operation.operationIsVoid = actualType === 'void';
       operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
@@ -968,12 +981,15 @@ function processServices(swagger, models, options) {
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsPrimitiveArray =
         !modelResult && resultType.toString().indexOf('[]') >= 0;
+      operation.operationIsFile = actualType === 'Blob';
       operation.operationResponseType =
+        operation.operationIsFile ? 'blob' :
         operation.operationIsVoid ||
         operation.operationIsString ||
         operation.operationIsNumber ||
         operation.operationIsBoolean ||
-        operation.operationIsEnum ? 'text' : 'json';
+        operation.operationIsEnum ?
+          'text' : 'json';
       operation.operationIsUnknown = !(
         operation.operationIsVoid ||
         operation.operationIsString ||
@@ -981,6 +997,7 @@ function processServices(swagger, models, options) {
         operation.operationIsBoolean ||
         operation.operationIsEnum ||
         operation.operationIsObject ||
+        operation.operationIsFile ||
         operation.operationIsPrimitiveArray
       );
       descriptor.serviceOperations.push(operation);

@@ -6,11 +6,14 @@
     }}): Observable<HttpResponse<{{{operationResultType}}}>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
-    let __body: any = null;
+    let __body: any = null;{{#operationIsMultipart}}
+    __headers.append('Content-Type', 'multipart/form-data');
+    let __formData = new FormData();
+    __body = __formData;{{/operationIsMultipart}}
 {{#operationParameters}}{{>parameter}}
 {{/operationParameters}}
     let req = new HttpRequest<any>(
-      "{{operationMethod}}",
+      '{{operationMethod}}',
       this.rootUrl + `{{{operationPathExpression}}}`,
       __body,
       {
@@ -29,6 +32,7 @@
         }}{{#operationIsBoolean}}_body = _resp.body == 'true'{{/operationIsBoolean
         }}{{#operationIsEnum}}_body = _resp.body as {{{operationResultType}}}{{/operationIsEnum
         }}{{#operationIsObject}}_body = _resp.body as {{{operationResultType}}}{{/operationIsObject
+        }}{{#operationIsFile}}_body = _resp.body as Blob{{/operationIsFile
         }}{{#operationIsPrimitiveArray}}_body = _resp.body as {{{operationResultType}}}{{/operationIsPrimitiveArray
         }}
         return _resp.clone({body: _body}) as HttpResponse<{{{operationResultType}}}>;

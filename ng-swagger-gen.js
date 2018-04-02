@@ -81,6 +81,7 @@ function doGenerate(swagger, options) {
   mkdirs(servicesOutput);
 
   var removeStaleFiles = options.removeStaleFiles !== false;
+  var generateEnumModule = options.enumModule !== false;
 
   // Utility function to render a template and write it to a file
   var generate = function(template, model, file) {
@@ -94,6 +95,9 @@ function doGenerate(swagger, options) {
   var modelsArray = [];
   for (var modelName in models) {
     var model = models[modelName];
+    if (model.modelIsEnum) {
+      model.enumModule = generateEnumModule;
+    }
     modelsArray.push(model);
     generate(
       templates.model,

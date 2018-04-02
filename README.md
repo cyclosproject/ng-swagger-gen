@@ -155,7 +155,7 @@ It is also possible to use the online version at
 `https://github.com/cyclosproject/ng-swagger-gen/blob/master/ng-swagger-gen-schema.json`.
 
 It is also possible to specify the configuration file to use. This is useful
-when multiple APIs are generated. To specify a configuration file, use the 
+when multiple APIs are generated. To specify a configuration file, use the
 argument `--config` or its short form, `-c`, like this:
 
 ```bash
@@ -199,6 +199,10 @@ The supported properties in the JSON file are:
   all services. Defaults to true.
 - `apiModule`: Indicates whether or not to generate the Angular module which
   provides all services and the `ApiConfiguration`. Defaults to true.
+- `enumModule`: Indicates whether or not to export an additional TypeScript
+  module (not to be confused with Angular's @NgModule) for each enum model,
+  exporting values as constants and providing the values() method. Setting to
+  false will reduce the size of the generated code. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
 
 ### Configuration file example
@@ -255,7 +259,7 @@ the call to `ng-swagger-gen`, like:
 ## Specifying the root URL / web service endpoint
 The easiest way to specify a custom root URL (web service endpoint URL) is to
 inject the `ApiConfiguration` instance in some service and set the `rootUrl`
-property from there. 
+property from there.
 
 Alternatively, define a provider for `APP_INITIALIZER` in your root module,
 like this:

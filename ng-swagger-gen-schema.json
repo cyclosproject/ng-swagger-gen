@@ -73,6 +73,11 @@
       "type": "boolean",
       "default": "true"
     },
+    "enumModule": {
+      "description": "Indicates whether or not to export an additional TypeScript module (not to be confused with Angular's @NgModule) for each enum model, exporting values as constants and providing the values() method. Setting to false will reduce the size of the generated code. Defaults to true.",
+      "type": "boolean",
+      "default": "true"
+    },
     "templates": {
       "description": "Path to override the Mustache templates used to generate files.",
       "type": "string"

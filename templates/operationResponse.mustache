@@ -1,9 +1,9 @@
 {{{operationComments}}}{{operationName}}Response({{#operationParamsClass
   }}params: {{serviceClass}}.{{operationParamsClass}}{{/operationParamsClass}}{{^operationParamsClass
-  }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{paramType
-  }}{{^paramIsLast}},
+  }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{{paramType
+  }}}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
-    }}): Observable<HttpResponse<{{operationResultType}}>> {
+    }}): Observable<HttpResponse<{{{operationResultType}}}>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -16,22 +16,22 @@
       {
         headers: __headers,
         params: __params,
-        responseType: '{{operationResponseType}}'
+        responseType: '{{{operationResponseType}}}'
       });
 
     return this.http.request<any>(req).pipe(
       filter(_r => _r instanceof HttpResponse),
       map(_r => {
         let _resp = _r as HttpResponse<any>;
-        let _body: {{operationResultType}} = null;
+        let _body: {{{operationResultType}}} = null;
         {{#operationIsString}}_body = _resp.body as string{{/operationIsString
         }}{{#operationIsNumber}}_body = parseFloat(_resp.body as string){{/operationIsNumber
         }}{{#operationIsBoolean}}_body = _resp.body == 'true'{{/operationIsBoolean
-        }}{{#operationIsEnum}}_body = _resp.body as {{operationResultType}}{{/operationIsEnum
-        }}{{#operationIsObject}}_body = _resp.body as {{operationResultType}}{{/operationIsObject
-        }}{{#operationIsPrimitiveArray}}_body = _resp.body as {{operationResultType}}{{/operationIsPrimitiveArray
+        }}{{#operationIsEnum}}_body = _resp.body as {{{operationResultType}}}{{/operationIsEnum
+        }}{{#operationIsObject}}_body = _resp.body as {{{operationResultType}}}{{/operationIsObject
+        }}{{#operationIsPrimitiveArray}}_body = _resp.body as {{{operationResultType}}}{{/operationIsPrimitiveArray
         }}
-        return _resp.clone({body: _body}) as HttpResponse<{{operationResultType}}>;
+        return _resp.clone({body: _body}) as HttpResponse<{{{operationResultType}}}>;
       })
     );
   }

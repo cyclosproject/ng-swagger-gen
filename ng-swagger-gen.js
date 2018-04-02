@@ -564,14 +564,22 @@ function processModels(swagger, options) {
 
 /**
  * Removes an array designation from the given type.
- * For example, "a[]" returns "a", while "b" returns "b".
+ * For example, "Array<a>" returns "a", "a[]" returns "a", while "b" returns "b".
  * A special case is for inline objects. In this case, the result is "object".
  */
 function removeBrackets(type) {
   if (typeof type == 'object') {
     return 'object';
   }
-  var pos = (type || '').indexOf('[');
+  if (type == null || type.length === 0) {
+    return type;
+  }
+  var pos = type.indexOf('Array<');
+  if (pos >= 0) {
+    var start = 'Array<'.length;
+    return type.substr(start, type.length - start - 1);
+  }
+  pos = type.indexOf('[');
   return pos >= 0 ? type.substr(0, pos) : type;
 }
 
@@ -597,9 +605,12 @@ function propertyType(property) {
   }
   switch (property.type) {
     case 'string':
+      if (property.enum && property.enum.length > 0) {
+        return '\'' + property.enum.join('\' | \'') + '\'';
+      }
       return 'string';
     case 'array':
-      return propertyType(property.items) + '[]';
+      return 'Array<' + propertyType(property.items) + '>';
     case 'integer':
     case 'number':
       return 'number';

@@ -16,12 +16,10 @@
   },
   "dependencies": {
     "argparse": "^1.0.9",
-    "mustache": "^2.3.0"
+    "mustache": "^2.3.0",
+    "json-schema-ref-parser": "^4.1.1"
   },
   "bin": {
     "ng-swagger-gen": "./ng-swagger-gen"
-  },
-  "devDependencies": {
-    "json-schema-ref-parser": "^4.1.1"
   }
 }

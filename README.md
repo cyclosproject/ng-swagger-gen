@@ -38,13 +38,16 @@ The design principles are:
 
 Here are a few notes:
 
+- Starting with version 0.11.0, the Swagger definition can be either a JSON or
+  YAML file (thanks to @jfyne);
+- Starting with version 0.11.0, file downloads / uploads are supported using
+  the native [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob) type;
 - Each operation is assumed to have a single tag. If none is declared, a default
   of `Api` (configurable) is assumed. If multiple tags are declared, the first
   one is used;
 - Each tag generates a service class;
 - Operations that don't declare an id have an id generated. However, it is
   recommended that all operations define an id;
-- File uploads are not supported;
 - Two versions are generated for each service operation: one returning
   `Observable<HttpResponse<T>>` (the method is suffixed with `Response`) and
   another one returning `Observable<T>`. Previous versions generated `Promises`

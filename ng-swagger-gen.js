@@ -600,11 +600,6 @@ function propertyType(property) {
   } else if (property['x-type']) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
-    var pos = type.indexOf('Array<');
-    if (pos >= 0) {
-      type = type.substr('Array<'.length, type.length);
-      type = type.substr(0, type.length - 1) + '[]';
-    }
     return type.length == 0 ? 'void' : type;
   }
   switch (property.type) {
@@ -980,7 +975,8 @@ function processServices(swagger, models, options) {
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsPrimitiveArray =
-        !modelResult && resultType.toString().indexOf('[]') >= 0;
+        !modelResult && (resultType.toString().includes('Array<') ||
+          resultType.toString().includes('[]'));
       operation.operationIsFile = actualType === 'Blob';
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
@@ -1016,7 +1012,7 @@ function processServices(swagger, models, options) {
     }
   }
 
-  // Resolve the models used by each
+  // Resolve the models used by each service
   for (name in services) {
     var service = services[name];
     var dependencies = new DependenciesResolver(models);

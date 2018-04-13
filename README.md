@@ -302,6 +302,122 @@ export const INIT_API_CONFIGURATION: Provider = {
 export class AppModule { }
 ```
 
+## Passing request headers / customizing the request
+To pass request headers, such as authorization or API keys, as well as having a
+centralized error handling, a standard
+[HttpInterceptor](https://angular.io/guide/http#intercepting-all-requests-or-responses) should
+be used. It is basically an `@Injectable` that is called before each request,
+and can customize both requests and responses.
+
+Here is an example:
+
+```typescript
+@Injectable()
+export class ApiInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Apply the headers
+    req = req.clone({
+      setHeaders: {
+        'ApiToken': '234567890'
+      }
+    });
+
+    // Also handle errors globally
+    return next.handle(req).pipe(
+      tap(x => x, err => {
+        // Handle this err
+        console.error(`Error performing request, status code = ${err.status}`);
+      })
+    );
+  }
+}
+```
+
+Then, both the `HttpInterceptor` implementation and the injection token
+`HTTP_INTERCEPTORS` pointing to it must be provided in your application module,
+like this:
+
+```typescript
+import { NgModule, Provider, forwardRef } from '@angular/core';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+
+import { ApiInterceptor } from './api.interceptor';
+
+export const API_INTERCEPTOR_PROVIDER: Provider = {
+  provide: HTTP_INTERCEPTORS,
+  useExisting: forwardRef(() => ApiInterceptor),
+  multi: true
+};
+
+@NgModule({
+  providers: [
+    ApiInterceptor,
+    API_INTERCEPTOR_PROVIDER
+  ]
+})
+export class AppModule {}
+```
+
+Finer control over specific requests can also be achieved, such as:
+
+- Set the immediate next request to use a BASIC authentication for login, and
+  the subsequent ones to use a session key in another request header;
+- Set the next request to not use the default error handling, and handle errors
+  directly in the calling code.
+
+To do so, just create another shared `@Injectable()`, for example, called
+`ApiRequestConfiguration`, which has state for such special cases. Then inject
+it on both the `HttpInterceptor` and in the client code that makes requests.
+Here is an example for such class for controlling the authentication:
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpRequest } from '@angular/common/http';
+
+/**
+ * Configuration for the performed HTTP requests
+ */
+@Injectable()
+export class ApiRequestConfiguration {
+  private nextAuthHeader: string;
+  private nextAuthValue: string;
+
+  /** Set to basic authentication */
+  basic(user: string, password: string): void {
+    this.nextAuthHeader = 'Authorization';
+    this.nextAuthValue = 'Basic ' + btoa(user + ':' + password);
+  }
+
+  /** Set to session key */
+  nextAsSession(sessionKey: string): void {
+    this.nextAuthHeader = 'Session';
+    this.nextAuthValue = sessionKey;
+  }
+
+  /** Clear any authentication headers (to be called after logout) */
+  clear(): void {
+    this.nextAuthHeader = null;
+    this.nextAuthValue = null;
+  }
+
+  /** Apply the current authorization headers to the given request */
+  apply(req: HttpRequest<any>): HttpRequest<any> {
+    const headers = {};
+    if (this.nextAuthHeader) {
+      headers[this.nextAuthHeader] = this.nextAuthValue;
+    }
+    // Apply the headers to the request
+    return req.clone({
+      setHeaders: headers
+    });
+  }
+}
+```
+
+Then change the `ApiInterceptor` class to call the `apply` method.
+And, of course, add `ApiRequestConfiguration` to your module `providers` and
+inject it on your components or services.
+
 ## Swagger extensions
 The swagger specification doesn't allow referencing an enumeration to be used
 as an operation parameter. Hence, `ng-swagger-gen` supports the vendor

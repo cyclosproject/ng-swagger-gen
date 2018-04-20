@@ -12,7 +12,7 @@ import { filter } from 'rxjs/operators/filter';
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
 {{{serviceComments}}}@Injectable()
-export class {{serviceClass}} extends BaseService {
+class {{serviceClass}} extends BaseService {
   constructor(
     config: ApiConfiguration,
     http: HttpClient
@@ -22,7 +22,7 @@ export class {{serviceClass}} extends BaseService {
 {{#serviceOperations}}{{>operationResponse}}{{>operationBody}}{{/serviceOperations}}
 }
 
-export module {{serviceClass}} {
+module {{serviceClass}} {
 {{#serviceOperations}}{{#operationParamsClass}}
 {{{operationParamsClassComments}}}export interface {{operationParamsClass}} {
 {{#operationParameters}}
@@ -31,3 +31,5 @@ export module {{serviceClass}} {
   }
 {{/operationParamsClass}}{{/serviceOperations}}
 }
+
+export { {{serviceClass}} }

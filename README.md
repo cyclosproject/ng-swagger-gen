@@ -1,21 +1,35 @@
-ng-swagger-gen: A Swagger 2.0 code generator for Angular 4.3+
+ng-swagger-gen: A Swagger 2.0 code generator for Angular
 ---
 
 This project is a NPM module that generates model interfaces and web service
 clients from a [Swagger 2.0](http://swagger.io/)
 [specification](http://swagger.io/specification/).
-The generated classes follow the principles of Angular 4.3+ projects.
+The generated classes follow the principles of
+[Angular](https://angular.io/).
 
-Up to the version 0.8.x of this generator the deprecated `Http` Angular module
-was used to generating requests. Starting with version 0.9, `HttpClient` is
-used instead - hence the requirement for Angular 4.3+.
-Also, taking the opportunity to break backwards compatibility,
-some additional changes were also performed. For more details, please see
-the [Upgrading from previous versions to 0.9](https://github.com/cyclosproject/ng-swagger-gen/wiki/Upgrading-from-previous-versions-to-0.9) page in the project wiki.
+Angular / RxJS version compatibility:
 
-This generator may not cover all corner cases of the Swagger 2.0 specification.
+- Starting with version `1.0.0`, Angular 6+ is required.
+- Version `0.11.x` supports Angular 4.3+ (with rxjs 5.5) and Angular 5.
 
-The design principles are:
+## Major version upgrade notices
+
+- [Angular 6](https://blog.angular.io/version-6-of-angular-now-available-cc56b0efa7a4)
+  bundles RxJS 6, which
+  [changed the API, mostly imports](https://github.com/ReactiveX/rxjs/blob/master/MIGRATION.md).
+  As such, starting with `ng-swagger-gen` version `1.0.0`, both peer
+  dependencies for `@angular/core` and `rxjs` have been upgraded. If you plan to
+  stay in Angular 5, change the `ng-swagger-gen` version in `package.json` to
+  `~0.11.0`;
+- Up to the version `0.8.x` of this generator the deprecated `Http` Angular
+  module was used to generating requests. Starting with version 0.9,
+  `HttpClient` is used instead - hence the requirement for Angular 4.3+.
+  Also, taking the opportunity to break backwards compatibility,
+  some additional changes were also performed, such as returning `Observable`s
+  instead of `Promise`s. For more details, please see the wiki page
+  [Upgrading from previous versions to 0.9](https://github.com/cyclosproject/ng-swagger-gen/wiki/Upgrading-from-previous-versions-to-0.9).
+
+## Design principles
 
 - It must be easy to use;
 - It should provide access to the original response, so, for example, headers
@@ -48,13 +62,12 @@ Here are a few notes:
 - Each tag generates a service class;
 - Operations that don't declare an id have an id generated. However, it is
   recommended that all operations define an id;
-- Two versions are generated for each service operation: one returning
+- Two methods are generated for each service operation: one returning
   `Observable<HttpResponse<T>>` (the method is suffixed with `Response`) and
-  another one returning `Observable<T>`. Previous versions generated `Promises`
-  instead, but as of version 0.9+, and refactored support to Angular 5 /
-  `HttpClient`, `Observable`s are returned instead, as they are more flexible.
-  Actually, those still preferring promises can just call the
-  `Observable.toPromise()` method;
+  another one returning `Observable<T>`;
+- This generator may not cover all corner cases of the Swagger 2.0
+  specification;
+- OpenAPI 3.0 is not supported, but may be added in the future;
 - Probably many more.
 
 ## Requirements
@@ -63,14 +76,11 @@ The generator itself has very few requirements, basically
 [argparse](https://www.npmjs.com/package/argparse) and
 [mustache](https://www.npmjs.com/package/mustache).
 
-However, the generated code requires:
-
-- **@angular/core**: Angular version **4.3.0 or higher** is required, because
-  4.3 is the version that introduced HttpClient;
-- **rxjs**: rxjs version **5.5.0 or higher** is required, because the generated
-  code uses [lettable operators](https://github.com/ReactiveX/rxjs/blob/master/doc/lettable-operators.md).
-  Please, note that Angular 4.3 originally depended on rxjs 5.4, so, please,
-  upgrade it in your `package.json` to at least 5.5.0.
+However, starting with the version 1.0.0, the generated code requires
+both Angular 6.0+ and RxJS 6.0+. These versions are expressed as
+`peerDependencies`, so make sure you don't have unmet peer dependencies.
+If you are stuck on previous versions of Angular / RxJS, you can use
+`ng-swagger-gen` version as `~0.11.0`, which supports Angular 4.3, and RxJS 5.5.
 
 ## How to use it
 In your project, run:

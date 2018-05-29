@@ -91,7 +91,7 @@ function doGenerate(swagger, options) {
     console.info('Wrote ' + file);
   };
 
-  // Write the models
+  // Write the models and mocks
   var modelsArray = [];
   for (var modelName in models) {
     var model = models[modelName];
@@ -104,6 +104,11 @@ function doGenerate(swagger, options) {
       model,
       modelsOutput + '/' + model.modelFile + '.ts'
     );
+    generate(
+      templates.mock,
+      {mock: JSON.stringify(model.modelMock, null, 4)},
+      modelsOutput + '/' + model.modelMockFile + '.json'
+    );
   }
   if (modelsArray.length > 0) {
     modelsArray[modelsArray.length - 1].modelIsLast = true;
@@ -115,7 +120,8 @@ function doGenerate(swagger, options) {
       var basename = path.basename(file);
       for (var modelName in models) {
         var model = models[modelName];
-        if (basename == model.modelFile + '.ts') {
+        if (basename == model.modelFile + '.ts'
+          || basename == model.modelFile + '.mock.json') {
           ok = true;
           break;
         }
@@ -336,6 +342,14 @@ function toFileName(typeName) {
 }
 
 /**
+ * Сonverts a given type name into a file name of the mock file
+ * @param typeName
+ */
+function toMockFileName(typeName) {
+  return toFileName(typeName) + '.mock';
+}
+
+/**
  * Resolves the simple reference name from a qualified reference
  */
 function simpleRef(ref) {
@@ -421,6 +435,7 @@ DependenciesResolver.prototype.get = function() {
 /**
  * Process each model, returning an object keyed by model name, whose values
  * are simplified descriptors for models.
+ * вот тут-то и надо приармяниться
  */
 function processModels(swagger, options) {
   var name, model, i, property;
@@ -430,6 +445,7 @@ function processModels(swagger, options) {
     var parent = null;
     var properties = null;
     var requiredProperties = null;
+    var example = model.example || null;
     var enumValues = null;
     var elementType = null;
     var simpleType = null;
@@ -474,6 +490,8 @@ function processModels(swagger, options) {
       modelSimpleType: simpleType,
       properties: properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
+      modelMock: example,
+      modelMockFile: toMockFileName(name),
       modelEnumValues: enumValues,
       modelElementType: elementType,
       modelSubclasses: [],

@@ -91,7 +91,7 @@ function doGenerate(swagger, options) {
     console.info('Wrote ' + file);
   };
 
-  // Write the models and mocks
+  // Write the models and examples
   var modelsArray = [];
   for (var modelName in models) {
     var model = models[modelName];
@@ -105,9 +105,9 @@ function doGenerate(swagger, options) {
       modelsOutput + '/' + model.modelFile + '.ts'
     );
     generate(
-      templates.mock,
-      {mock: JSON.stringify(model.modelMock, null, 4)},
-      modelsOutput + '/' + model.modelMockFile + '.json'
+      templates.example,
+      {example: JSON.stringify(model.modelExample, null, 4)},
+      modelsOutput + '/' + model.modelExampleFile + '.json'
     );
   }
   if (modelsArray.length > 0) {
@@ -121,7 +121,7 @@ function doGenerate(swagger, options) {
       for (var modelName in models) {
         var model = models[modelName];
         if (basename == model.modelFile + '.ts'
-          || basename == model.modelFile + '.mock.json') {
+          || basename == model.modelFile + '.example.json') {
           ok = true;
           break;
         }
@@ -342,11 +342,11 @@ function toFileName(typeName) {
 }
 
 /**
- * Сonverts a given type name into a file name of the mock file
+ * Сonverts a given type name into a file name of the example file
  * @param typeName
  */
-function toMockFileName(typeName) {
-  return toFileName(typeName) + '.mock';
+function toExampleFileName(typeName) {
+  return toFileName(typeName) + '.example';
 }
 
 /**
@@ -435,7 +435,6 @@ DependenciesResolver.prototype.get = function() {
 /**
  * Process each model, returning an object keyed by model name, whose values
  * are simplified descriptors for models.
- * вот тут-то и надо приармяниться
  */
 function processModels(swagger, options) {
   var name, model, i, property;
@@ -490,8 +489,8 @@ function processModels(swagger, options) {
       modelSimpleType: simpleType,
       properties: properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
-      modelMock: example,
-      modelMockFile: toMockFileName(name),
+      modelExample: example,
+      modelExampleFile: toExampleFileName(name),
       modelEnumValues: enumValues,
       modelElementType: elementType,
       modelSubclasses: [],

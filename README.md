@@ -113,10 +113,10 @@ project_root
       +- api
          +- models
          |  +- model1.ts
-         |  +- model1.mock.json
+         |  +- model1.example.json
          |  +- ...
          |  +- modeln.ts
-         |  +- modeln.mock.json
+         |  +- modeln.example.json
          +- services
          |  +- tag1.service.ts
          |  +- ...
@@ -132,7 +132,7 @@ The files are:
 
 - **api/models/model*n*.ts**: One file per model file is generated here.
   Enumerations are also correctly generated;
-- **api/models/model*n*.ts**: One file per mock is generated for each model that has `example` section.
+- **api/models/model*n*.ts**: One file per example is generated for each model that has `example` section.
 - **api/models.ts**: An index script which exports all model interfaces. It is
   used to make it easier for application classes to import models, so they can
   use `import { Model1, Model2 } from 'api/models'` instead of

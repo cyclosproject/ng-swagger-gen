@@ -78,12 +78,20 @@ if (args.genConfig) {
     generateConfig();
   }
 } else {
-  if (args.swagger) {
+  if (configExists) {
+    // The configuration file exists, so read it
+    const options = parseJSON(config);
+    // Allow overriding both swagger and output via arguments
+    if (args.swagger) {
+      options.swagger = args.swagger;
+    }
+    if (args.output) {
+      options.output = args.output;
+    }
+    run(options);
+  } else if (args.swagger) {
     // The args variables are the same one as the options
     run(args);
-  } else if (configExists) {
-    // The configuration file exists, so read it
-    run(parseJSON(config));
   } else {
     // No configuration file. Show the usage and exit.
     argParser.parseArgs(["--help"]);

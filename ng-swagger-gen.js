@@ -104,7 +104,7 @@ function doGenerate(swagger, options) {
       model,
       modelsOutput + '/' + model.modelFile + '.ts'
     );
-    if (options.generateExamples) {
+    if (options.generateExamples && model.modelExample) {
       generate(
         templates.example,
         {example: JSON.stringify(model.modelExample, null, 4)},

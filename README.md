@@ -220,6 +220,10 @@ The supported properties in the JSON file are:
   exporting values as constants and providing the values() method. Setting to
   false will reduce the size of the generated code. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
+- `generateExamples`: When set to true, ng-swagger-gen will extract the 
+example from the [example](https://swagger.io/docs/specification/2-0/adding-examples/)
+section of each definition and add put it to the respective `*.example.json` files
+right besides the model files.
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few

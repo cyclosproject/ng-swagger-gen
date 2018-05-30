@@ -104,11 +104,12 @@ function doGenerate(swagger, options) {
       model,
       modelsOutput + '/' + model.modelFile + '.ts'
     );
-    generate(
+    if (options.generateExamples) {
+      generate(
       templates.example,
       {example: JSON.stringify(model.modelExample, null, 4)},
       modelsOutput + '/' + model.modelExampleFile + '.json'
-    );
+    );}
   }
   if (modelsArray.length > 0) {
     modelsArray[modelsArray.length - 1].modelIsLast = true;

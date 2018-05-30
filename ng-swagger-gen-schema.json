@@ -81,6 +81,11 @@
     "templates": {
       "description": "Path to override the Mustache templates used to generate files.",
       "type": "string"
+    },
+    "generateExamples": {
+      "description": "Indicates whether or not to generate the example files from the example sections of the models. Defaults to false.",
+      "type": "boolean",
+      "default": "false"
     }
   }
 }

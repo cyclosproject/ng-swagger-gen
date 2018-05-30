@@ -381,6 +381,10 @@ function toEnumName(value) {
     result += c.toUpperCase();
     wasLower = isLower;
   }
+  if (!isNaN(value[0])) {
+    result = '_' + result;
+  }
+  result = result.replace(/[\s:\-#]/ig, '_');
   return result;
 }
 

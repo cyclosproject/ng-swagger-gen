@@ -91,7 +91,7 @@ function doGenerate(swagger, options) {
     console.info('Wrote ' + file);
   };
 
-  // Write the models
+  // Write the models and examples
   var modelsArray = [];
   for (var modelName in models) {
     var model = models[modelName];
@@ -104,6 +104,13 @@ function doGenerate(swagger, options) {
       model,
       modelsOutput + '/' + model.modelFile + '.ts'
     );
+    if (options.generateExamples && model.modelExample) {
+      generate(
+        templates.example,
+        {example: JSON.stringify(model.modelExample, null, 4)},
+        modelsOutput + '/' + model.modelExampleFile + '.json'
+      );
+    }
   }
   if (modelsArray.length > 0) {
     modelsArray[modelsArray.length - 1].modelIsLast = true;
@@ -115,7 +122,8 @@ function doGenerate(swagger, options) {
       var basename = path.basename(file);
       for (var modelName in models) {
         var model = models[modelName];
-        if (basename == model.modelFile + '.ts') {
+        if (basename == model.modelFile + '.ts'
+          || basename == model.modelFile + '.example.json') {
           ok = true;
           break;
         }
@@ -336,6 +344,14 @@ function toFileName(typeName) {
 }
 
 /**
+ * Сonverts a given type name into a file name of the example file
+ * @param typeName
+ */
+function toExampleFileName(typeName) {
+  return toFileName(typeName) + '.example';
+}
+
+/**
  * Resolves the simple reference name from a qualified reference
  */
 function simpleRef(ref) {
@@ -430,6 +446,7 @@ function processModels(swagger, options) {
     var parent = null;
     var properties = null;
     var requiredProperties = null;
+    var example = model.example || null;
     var enumValues = null;
     var elementType = null;
     var simpleType = null;
@@ -474,6 +491,8 @@ function processModels(swagger, options) {
       modelSimpleType: simpleType,
       properties: properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
+      modelExample: example,
+      modelExampleFile: toExampleFileName(name),
       modelEnumValues: enumValues,
       modelElementType: elementType,
       modelSubclasses: [],

@@ -113,8 +113,10 @@ project_root
       +- api
          +- models
          |  +- model1.ts
+         |  +- model1.example.json
          |  +- ...
          |  +- modeln.ts
+         |  +- modeln.example.json
          +- services
          |  +- tag1.service.ts
          |  +- ...
@@ -130,6 +132,7 @@ The files are:
 
 - **api/models/model*n*.ts**: One file per model file is generated here.
   Enumerations are also correctly generated;
+- **api/models/model*n*.ts**: One file per example is generated for each model that has `example` section.
 - **api/models.ts**: An index script which exports all model interfaces. It is
   used to make it easier for application classes to import models, so they can
   use `import { Model1, Model2 } from 'api/models'` instead of
@@ -217,6 +220,10 @@ The supported properties in the JSON file are:
   exporting values as constants and providing the values() method. Setting to
   false will reduce the size of the generated code. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
+- `generateExamples`: When set to true, ng-swagger-gen will extract the 
+example from the [example](https://swagger.io/docs/specification/2-0/adding-examples/)
+section of each definition and add put it to the respective `*.example.json` files
+right besides the model files.
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few

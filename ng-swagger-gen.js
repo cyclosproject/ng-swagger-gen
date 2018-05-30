@@ -384,7 +384,7 @@ function toEnumName(value) {
   if (!isNaN(value[0])) {
     result = '_' + result;
   }
-  result = result.replace(/[\s:\-#]/ig, '_');
+  result = result.replace(/[^\w]/g, '_');
   return result;
 }
 

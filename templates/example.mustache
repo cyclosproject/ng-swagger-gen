@@ -1,3 +1,4 @@
 import { {{modelClass}} } from './{{modelFile}}';
-const example: {{modelClass}} = {{{modelExampleStr}}};
-export default example;
+export function produce{{modelClass}}Example(): {{modelClass}} {
+return {{{modelExampleStr}}};
+}

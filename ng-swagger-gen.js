@@ -105,10 +105,11 @@ function doGenerate(swagger, options) {
       modelsOutput + '/' + model.modelFile + '.ts'
     );
     if (options.generateExamples && model.modelExample) {
+      model.modelExampleStr = JSON.stringify(model.modelExample, null, 4),
       generate(
         templates.example,
-        {example: JSON.stringify(model.modelExample, null, 4)},
-        modelsOutput + '/' + model.modelExampleFile + '.json'
+        model,
+        modelsOutput + '/' + model.modelExampleFile + '.ts'
       );
     }
   }
@@ -123,7 +124,7 @@ function doGenerate(swagger, options) {
       for (var modelName in models) {
         var model = models[modelName];
         if (basename == model.modelFile + '.ts'
-          || basename == model.modelFile + '.example.json') {
+          || basename == model.modelExampleFile + '.ts') {
           ok = true;
           break;
         }

@@ -153,7 +153,8 @@ The files are:
 - **api/api.module.ts**: A module that declares an `NgModule` that provides all
   services, plus the `ApiConfiguration` instance. Your root application module
   should import this module to ensure all services are available via dependency
-  injection on your application.
+  injection on your application. Use `ApiModule.forRoot()` in your root module. 
+  In all the other modules, you should include the module without the `.forRoot()` to prevent the configuration from being overridden.
 
 ## Using a configuration file
 On regular usage it is recommended to use a configuration file instead of

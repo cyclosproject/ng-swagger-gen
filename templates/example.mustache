@@ -1,4 +1,8 @@
 import { {{modelClass}} } from './{{modelFile}}';
-export function produce{{modelClass}}Example(): {{modelClass}} {
-return {{{modelExampleStr}}};
+
+/**
+ * Returns example data for `{{modelClass}}`.
+ */
+export function get{{modelClass}}Example(): {{modelClass}} {
+  return {{{modelExampleStr}}};
 }

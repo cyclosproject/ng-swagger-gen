@@ -105,7 +105,11 @@ function doGenerate(swagger, options) {
       modelsOutput + '/' + model.modelFile + '.ts'
     );
     if (options.generateExamples && model.modelExample) {
-      model.modelExampleStr = JSON.stringify(model.modelExample, null, 4),
+      var example = JSON.stringify(model.modelExample, null, 2);
+      example = example.replace(/'/g, "\\'");
+      example = example.replace(/"/g, "'");
+      example = example.replace(/\n/g, "\n  ");
+      model.modelExampleStr = example;
       generate(
         templates.example,
         model,
@@ -124,7 +128,8 @@ function doGenerate(swagger, options) {
       for (var modelName in models) {
         var model = models[modelName];
         if (basename == model.modelFile + '.ts'
-          || basename == model.modelExampleFile + '.ts') {
+          || basename == model.modelExampleFile + '.ts'
+            && model.modelExampleStr != null) {
           ok = true;
           break;
         }

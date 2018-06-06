@@ -3,9 +3,10 @@ import { HttpClientModule } from '@angular/common/http';
 import { ModuleWithProviders } from '@angular/compiler/src/core';
 import { ApiConfiguration } from './api-configuration';
 
-
 {{#services}}import { {{serviceClass}} } from './services/{{serviceFile}}';
 {{/services}}
+
+export const DEFAULT_API_CONFIG: ApiConfiguration = new ApiConfiguration();
 
 /**
  * Module that provides instances for all API services
@@ -24,10 +25,10 @@ import { ApiConfiguration } from './api-configuration';
   ],
 })
 export class ApiModule {
-    public static forRoot(apiConfiguration: ApiConfiguration): ModuleWithProviders {
+    public static forRoot(apiConfiguration?: ApiConfiguration): ModuleWithProviders {
     return {
       ngModule: ApiModule,
-      providers: [ { provide: ApiConfiguration, useValue: apiConfiguration }]
+      providers: [ { provide: ApiConfiguration, useValue: apiConfiguration || DEFAULT_API_CONFIG }]
     }
   }
 }

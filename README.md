@@ -307,7 +307,7 @@ export const INIT_API_CONFIGURATION: Provider = {
     AppComponent
   ],
   imports: [
-    ApiModule
+    ApiModule.forRoot()
   ],
   providers: [
     INIT_API_CONFIGURATION

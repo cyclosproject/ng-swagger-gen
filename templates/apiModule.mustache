@@ -24,7 +24,7 @@ import { ApiConfiguration } from './api-configuration';
   ],
 })
 export class ApiModule {
-    public static forRoot(apiConfiguration: ApiConfiguration = ApiConfiguration): ModuleWithProviders {
+    public static forRoot(apiConfiguration: ApiConfiguration): ModuleWithProviders {
     return {
       ngModule: ApiModule,
       providers: [ { provide: ApiConfiguration, useValue: apiConfiguration }]

@@ -151,9 +151,9 @@ The files are:
   If the service root URL is `null`, which is the default, the service will use
   the global root URL defined in `ApiConfiguration`;
 - **api/api.module.ts**: A module that declares an `NgModule` that provides all
-  services, plus the `ApiConfiguration` instance. Your root application module
+  services. Your root application module
   should import this module to ensure all services are available via dependency
-  injection on your application. Use `ApiModule.forRoot()` in your root module. 
+  injection on your application. Use `ApiModule.forRoot()` in your root module to ensure the `ApiConfiguration` class is available in all modules.
   In all the other modules, you should include the module without the `.forRoot()` to prevent the configuration from being overridden.
 
 ## Using a configuration file

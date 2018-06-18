@@ -39,7 +39,6 @@ argParser.addArgument(
   ["-o", "--output"],
   {
     help: "The root directory where files will be generated.",
-    defaultValue: schema.properties.output.default,
     dest: "output"
   }
 );
@@ -150,5 +149,8 @@ function askThenGenerateConfig() {
  */
 function run(options) {
   var ngSwaggerGen = require("./ng-swagger-gen.js");
+  if (options.output == null) {
+    options.output = schema.properties.output.default;
+  }
   ngSwaggerGen(options);
 }

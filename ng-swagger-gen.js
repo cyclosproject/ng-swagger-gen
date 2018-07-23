@@ -860,6 +860,7 @@ function processServices(swagger, models, options) {
   var minParamsForContainer = options.minParamsForContainer || 2;
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
+	var methodParameters = path['parameters'];
     for (var method in path || {}) {
       var def = path[method];
       if (!def) {
@@ -887,6 +888,10 @@ function processServices(swagger, models, options) {
       );
 
       var parameters = def.parameters || [];
+
+      if (methodParameters) {
+        parameters = parameters.concat(methodParameters);
+      }
 
       var paramsClass = null;
       var paramsClassComments = null;

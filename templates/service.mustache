@@ -1,14 +1,14 @@
 /* tslint:disable */
 import { Injectable } from '@angular/core';
 import {
-  HttpClient, HttpRequest, HttpResponse, 
+  HttpClient, HttpRequest, HttpResponse,
   HttpHeaders, HttpParams } from '@angular/common/http';
 import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { Observable } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 
-{{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
+{{#serviceDependencies}}import { {{modelClass}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
 {{{serviceComments}}}@Injectable({
   providedIn: 'root',

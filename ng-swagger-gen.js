@@ -98,6 +98,11 @@ function doGenerate(swagger, options) {
     if (model.modelIsEnum) {
       model.enumModule = generateEnumModule;
     }
+    // When the model name differs from the class name, it will be duplicated
+    // in the array. For example the-user would be TheUser, and would be twice.
+    if (modelsArray.includes(model)) {
+      continue;
+    }
     modelsArray.push(model);
     generate(
       templates.model,
@@ -274,7 +279,8 @@ function applyTagFilter(models, services, options) {
 
     // Remove all models that are unused
     for (var modelName in models) {
-      if (!allDependencies.has(modelName)) {
+      var model = models[modelName];
+      if (!allDependencies.has(model.modelClass)) {
         // This model is not used - remove it
         console.info(
           'Ignoring model ' +
@@ -291,12 +297,12 @@ function applyTagFilter(models, services, options) {
  * Collects on the given dependencies set all dependencies of the given model
  */
 function collectDependencies(dependencies, model, models) {
-  if (!model || dependencies.has(model.modelName)) {
+  if (!model || dependencies.has(model.modelClass)) {
     return;
   }
-  dependencies.add(model.modelName);
+  dependencies.add(model.modelClass);
   if (model.modelDependencies) {
-    model.modelDependencies.forEach((dep, index) =>
+    model.modelDependencies.forEach((dep) =>
       collectDependencies(dependencies, dep, models)
     );
   }
@@ -350,6 +356,32 @@ function toFileName(typeName) {
 }
 
 /**
+ * Converts a given name into a valid class name
+ */
+function toClassName(name) {
+  var result = '';
+  var upNext = false;
+  for (var i = 0; i < name.length; i++) {
+    var c = name.charAt(i);
+    var valid = /[\w]/.test(c);
+    if (!valid) {
+      upNext = true;
+    } else if (upNext) {
+      result += c.toUpperCase();
+      upNext = false;
+    } else if (result === '') {
+      result = c.toUpperCase();
+    } else {
+      result += c;
+    }
+  }
+  if (/[0-9]/.test(result.charAt(0))) {
+    result = '_' + result;
+  }
+  return result;
+}
+
+/**
  * Сonverts a given type name into a file name of the example file
  * @param typeName
  */
@@ -366,10 +398,9 @@ function simpleRef(ref) {
   }
   var index = ref.lastIndexOf('/');
   if (index >= 0) {
-    return ref.substr(index + 1);
-  } else {
-    return ref;
+    ref = ref.substr(index + 1);
   }
+  return toClassName(ref);
 }
 
 /**
@@ -433,7 +464,7 @@ DependenciesResolver.prototype.add = function(dep) {
     var depModel = this.models[dep];
     if (depModel) {
       this.dependencies.push(depModel);
-      this.dependencyNames.push(dep);
+      this.dependencyNames.push(depModel.modelClass);
     }
   }
 };
@@ -488,10 +519,11 @@ function processModels(swagger, options) {
     } else {
       simpleType = propertyType(model);
     }
+    var modelClass = toClassName(name);
     var descriptor = {
       modelName: name,
-      modelClass: name,
-      modelFile: toFileName(name),
+      modelClass: modelClass,
+      modelFile: toFileName(modelClass),
       modelComments: toComments(model.description),
       modelParent: parent,
       modelIsObject: properties != null,
@@ -526,6 +558,7 @@ function processModels(swagger, options) {
     }
 
     models[name] = descriptor;
+    models[descriptor.modelClass] = descriptor;
   }
 
   // Now that we know all models, process the hierarchies
@@ -856,7 +889,6 @@ function operationId(given, method, url, allKnown) {
 function processServices(swagger, models, options) {
   var param, name, i, j;
   var services = {};
-  var operationIds = new Set();
   var minParamsForContainer = options.minParamsForContainer || 2;
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
@@ -869,10 +901,11 @@ function processServices(swagger, models, options) {
       var tag = tagName(tags.length == 0 ? null : tags[0], options);
       var descriptor = services[tag];
       if (descriptor == null) {
+        var serviceClass = toClassName(tag);
         descriptor = {
           serviceName: tag,
-          serviceClass: tag + 'Service',
-          serviceFile: toFileName(tag) + '.service',
+          serviceClass: serviceClass + 'Service',
+          serviceFile: toFileName(serviceClass) + '.service',
           operationIds: new Set(),
           serviceOperations: [],
         };

@@ -205,6 +205,9 @@ The supported properties in the JSON file are:
   not referenced by any operation. Defaults to true.
 - `minParamsForContainer`: Indicates the minimum number of parameters to wrap
   operation parameters in a container class. Defaults to 2.
+- `sortParams`: How to sort operation parameters. Required always come first.
+  For backwards compatibility, the default value is `desc`, but `none` is
+  recommended for new projects.
 - `defaultTag`: The assumed tag for operations that don't define any.
   Defaults to `Api`.
 - `removeStaleFiles`: Indicates whether or not to remove any files in the

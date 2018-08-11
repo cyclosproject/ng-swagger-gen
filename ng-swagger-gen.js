@@ -1,5 +1,7 @@
 'use strict';
 
+/* jshint -W014 */
+
 const fs = require('fs');
 const url = require('url');
 const http = require('http');
@@ -890,6 +892,7 @@ function processServices(swagger, models, options) {
   var param, name, i, j;
   var services = {};
   var minParamsForContainer = options.minParamsForContainer || 2;
+  var sortParams = options.sortParams || 'desc';
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
     for (var method in path || {}) {
@@ -965,8 +968,16 @@ function processServices(swagger, models, options) {
       operationParameters.sort((a, b) => {
         if (a.paramRequired && !b.paramRequired) return -1;
         if (!a.paramRequired && b.paramRequired) return 1;
-        return a.paramName > b.paramName ? -1 :
-          a.paramName < b.paramName ? 1 : 0;
+        switch (sortParams) {
+          case 'asc':
+            return a.paramName > b.paramName ? 1 :
+              a.paramName < b.paramName ? -1 : 0;
+          case 'desc':
+            return a.paramName > b.paramName ? -1 :
+              a.paramName < b.paramName ? 1 : 0;
+          default:
+            return 0;
+        }
       });
       if (operationParameters.length > 0) {
         operationParameters[operationParameters.length - 1].paramIsLast = true;

@@ -10,7 +10,9 @@ import { map, filter } from 'rxjs/operators';
 
 {{#serviceDependencies}}import { {{modelName}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
-{{{serviceComments}}}@Injectable()
+{{{serviceComments}}}@Injectable({
+  providedIn: 'root',
+})
 class {{serviceClass}} extends BaseService {
   constructor(
     config: ApiConfiguration,

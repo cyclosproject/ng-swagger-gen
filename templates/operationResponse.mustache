@@ -34,6 +34,7 @@
         }}{{#operationIsObject}}_body = _resp.body as {{{operationResultType}}};{{/operationIsObject
         }}{{#operationIsFile}}_body = _resp.body as Blob;{{/operationIsFile
         }}{{#operationIsPrimitiveArray}}_body = _resp.body as {{{operationResultType}}};{{/operationIsPrimitiveArray
+        }}{{#operationIsUnknown}}_body = _resp.body as {{{operationResultType}}};{{/operationIsUnknown
         }}
         return _resp.clone({body: _body}) as HttpResponse<{{{operationResultType}}}>;
       })

@@ -846,7 +846,7 @@ function operationId(given, method, url, allKnown) {
   if (generate) {
     id = toIdentifier(method + url);
   } else {
-    id = given;
+    id = toIdentifier(given);
   }
   var duplicated = allKnown.has(id);
   if (duplicated) {

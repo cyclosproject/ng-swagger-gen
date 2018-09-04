@@ -1,6 +1,7 @@
 'use strict';
 
 /* jshint -W014 */
+/* jshint -W083 */
 
 const fs = require('fs');
 const url = require('url');
@@ -1093,7 +1094,15 @@ function processServices(swagger, models, options) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var response = op.operationResponses[code];
-        dependencies.add(response.type);
+        if (response.type) {
+          var type = response.type;
+          if (type && type.allTypes) {
+            // This is an inline object. Append all types
+            type.allTypes.forEach(t => dependencies.add(t));
+          } else {
+            dependencies.add(type);
+          }
+        }
       }
       for (j = 0; j < op.operationParameters.length; j++) {
         param = op.operationParameters[j];

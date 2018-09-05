@@ -29,7 +29,9 @@ function ngSwaggerGen(options) {
         `Error reading swagger location ${options.swagger}: ${err}`
       );
     }
-  );
+  ).catch(function (error) {
+    console.error(`Error: ${error}`);
+  });
 }
 
 /**

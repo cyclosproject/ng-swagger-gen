@@ -666,7 +666,9 @@ function propertyType(property) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
     return type.length == 0 ? 'null' : type;
-  }
+  } else if(property['x-nullable']) {
+    return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
+  }  
   switch (property.type) {
     case 'string':
       if (property.enum && property.enum.length > 0) {

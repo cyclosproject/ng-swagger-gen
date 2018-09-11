@@ -10,6 +10,11 @@ import { map, filter } from 'rxjs/operators';
 
 {{#serviceDependencies}}import { {{modelClass}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
+
+export type DataHttpResponse<T> = HttpResponse<T> & {
+  readonly body: T;
+}
+
 {{{serviceComments}}}@Injectable({
   providedIn: 'root',
 })

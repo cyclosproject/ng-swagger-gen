@@ -658,14 +658,14 @@ function removeBrackets(type) {
 function propertyType(property) {
   var type;
   if (property == null) {
-    return 'void';
+    return 'null';
   } else if (property.$ref != null) {
     // Type is a reference
     return simpleRef(property.$ref);
   } else if (property['x-type']) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
-    return type.length == 0 ? 'void' : type;
+    return type.length == 0 ? 'null' : type;
   }
   switch (property.type) {
     case 'string':
@@ -789,7 +789,7 @@ function processResponses(def, path, models) {
     };
   }
   if (!operationResponses.resultType) {
-    operationResponses.resultType = 'void';
+    operationResponses.resultType = 'null';
   }
   return operationResponses;
 }

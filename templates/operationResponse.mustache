@@ -3,9 +3,7 @@
   }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{{paramType
   }}}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
-    }}): Observable<{{#operationIsVoid}}HttpResponse<{{{operationResultType}}}>{{/operationIsVoid
-        }}{{^operationIsVoid}}DataHttpResponse<{{{operationResultType}}}>{{/operationIsVoid
-        }}> {
+    }}): Observable<DataHttpResponse<{{{operationResultType}}}>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;{{#operationIsMultipart}}

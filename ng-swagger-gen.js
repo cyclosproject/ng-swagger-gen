@@ -1048,6 +1048,7 @@ function processServices(swagger, models, options) {
       operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
       operation.operationIsBoolean = actualType === 'boolean';
+      operation.needsParsing = operation.operationIsBoolean || operation.operationIsNumber;
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsPrimitiveArray =

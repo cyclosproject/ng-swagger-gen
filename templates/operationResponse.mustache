@@ -21,7 +21,10 @@
         params: __params,
         responseType: '{{{operationResponseType}}}'
       });
-
+    {{^needsParsing}}
+    return this.http.request<any>(req).pipe(
+      filter(_r => _r instanceof HttpResponse)) as Observable<DataHttpResponse<{{{operationResultType}}}>>;{{/needsParsing}}
+    {{#needsParsing}}
     return this.http.request<any>(req).pipe(
       filter(_r => _r instanceof HttpResponse),
       map(_r => {
@@ -39,4 +42,5 @@
         return _resp.clone({body: _body}) as DataHttpResponse<{{{operationResultType}}}>;
       })
     );
+    {{/needsParsing}}
   }

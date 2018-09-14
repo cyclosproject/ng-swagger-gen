@@ -642,6 +642,15 @@ function removeBrackets(type) {
   if (typeof type == 'object') {
     return 'object';
   }
+  else if(type.replace(/ /g, '') !== type) {
+    return removeBrackets(type.replace(/ /g, ''));
+  }
+  else if(type.indexOf('null|')===0) {
+    return removeBrackets(type.substr('null|'.length))
+  }
+  else if(type.indexOf('undefined|')===0) { // Not used currently, but robust code is better code :)
+    return removeBrackets(type.substr('undefined|'.length))
+  }
   if (type == null || type.length === 0) {
     return type;
   }
@@ -660,15 +669,17 @@ function removeBrackets(type) {
 function propertyType(property) {
   var type;
   if (property == null) {
-    return 'void';
+    return 'null';
   } else if (property.$ref != null) {
     // Type is a reference
     return simpleRef(property.$ref);
   } else if (property['x-type']) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
-    return type.length == 0 ? 'void' : type;
-  }
+    return type.length == 0 ? 'null' : type;
+  } else if(property['x-nullable']) {
+    return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
+  }  
   switch (property.type) {
     case 'string':
       if (property.enum && property.enum.length > 0) {
@@ -791,7 +802,7 @@ function processResponses(def, path, models) {
     };
   }
   if (!operationResponses.resultType) {
-    operationResponses.resultType = 'void';
+    operationResponses.resultType = 'null';
   }
   return operationResponses;
 }
@@ -1053,6 +1064,7 @@ function processServices(swagger, models, options) {
       operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
       operation.operationIsBoolean = actualType === 'boolean';
+      operation.needsParsing = operation.operationIsBoolean || operation.operationIsNumber;
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsPrimitiveArray =

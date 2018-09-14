@@ -3,7 +3,7 @@
   }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{{paramType
   }}}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
-    }}): Observable<HttpResponse<{{{operationResultType}}}>> {
+    }}): Observable<DataHttpResponse<{{{operationResultType}}}>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;{{#operationIsMultipart}}
@@ -21,22 +21,26 @@
         params: __params,
         responseType: '{{{operationResponseType}}}'
       });
-
+    {{^needsParsing}}
+    return this.http.request<any>(req).pipe(
+      filter(_r => _r instanceof HttpResponse)) as Observable<DataHttpResponse<{{{operationResultType}}}>>;{{/needsParsing}}
+    {{#needsParsing}}
     return this.http.request<any>(req).pipe(
       filter(_r => _r instanceof HttpResponse),
       map(_r => {
         let _resp = _r as HttpResponse<any>;
-        let _body: {{{operationResultType}}} = null;
-        {{#operationIsString}}_body = _resp.body as string;{{/operationIsString
-        }}{{#operationIsNumber}}_body = parseFloat(_resp.body as string);{{/operationIsNumber
-        }}{{#operationIsBoolean}}_body = _resp.body == 'true';{{/operationIsBoolean
-        }}{{#operationIsEnum}}_body = _resp.body as {{{operationResultType}}};{{/operationIsEnum
-        }}{{#operationIsObject}}_body = _resp.body as {{{operationResultType}}};{{/operationIsObject
-        }}{{#operationIsFile}}_body = _resp.body as Blob;{{/operationIsFile
-        }}{{#operationIsPrimitiveArray}}_body = _resp.body as {{{operationResultType}}};{{/operationIsPrimitiveArray
-        }}{{#operationIsUnknown}}_body = _resp.body as {{{operationResultType}}};{{/operationIsUnknown
+        const _body: {{{operationResultType}}} = {{#operationIsString}} _resp.body as string;{{/operationIsString
+        }}{{#operationIsNumber}}parseFloat(_resp.body as string);{{/operationIsNumber
+        }}{{#operationIsBoolean}}_resp.body == 'true';{{/operationIsBoolean
+        }}{{#operationIsEnum}}_resp.body as {{{operationResultType}}};{{/operationIsEnum
+        }}{{#operationIsObject}}_resp.body as {{{operationResultType}}};{{/operationIsObject
+        }}{{#operationIsFile}}_resp.body as Blob;{{/operationIsFile
+        }}{{#operationIsPrimitiveArray}}_resp.body as {{{operationResultType}}};{{/operationIsPrimitiveArray
+        }}{{#operationIsUnknown}}_resp.body as {{{operationResultType}}};{{/operationIsUnknown
+        }}{{#operationIsVoid}}null;{{/operationIsVoid
         }}
-        return _resp.clone({body: _body}) as HttpResponse<{{{operationResultType}}}>;
+        return _resp.clone({body: _body}) as DataHttpResponse<{{{operationResultType}}}>;
       })
     );
+    {{/needsParsing}}
   }

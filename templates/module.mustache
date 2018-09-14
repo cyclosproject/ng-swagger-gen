@@ -1,13 +1,13 @@
 /* tslint:disable */
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
-import { ApiConfiguration } from './api-configuration';
+import { {{configurationClass}} } from './{{configurationFile}}';
 
 {{#services}}import { {{serviceClass}} } from './services/{{serviceFile}}';
 {{/services}}
 
 /**
- * Module that provides instances for all API services
+ * Provider for all {{ prefix }} services, plus {{configurationClass}}
  */
 @NgModule({
   imports: [
@@ -18,9 +18,9 @@ import { ApiConfiguration } from './api-configuration';
   ],
   declarations: [],
   providers: [
-    ApiConfiguration,
-{{#services}}   {{serviceClass}}{{^serviceIsLast}},{{/serviceIsLast}}
+    {{configurationClass}},
+{{#services}}    {{serviceClass}}{{^serviceIsLast}},{{/serviceIsLast}}
 {{/services}}
   ],
 })
-export class ApiModule { }
+export class {{moduleClass}} { }

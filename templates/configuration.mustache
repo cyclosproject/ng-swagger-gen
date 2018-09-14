@@ -2,11 +2,11 @@
 import { Injectable } from '@angular/core';
 
 /**
- * Contains global configuration for API services
+ * Global configuration for {{prefix}} services
  */
 @Injectable({
   providedIn: 'root',
 })
-export class ApiConfiguration {
+export class {{configurationClass}} {
   rootUrl: string = '{{{rootUrl}}}';
 }

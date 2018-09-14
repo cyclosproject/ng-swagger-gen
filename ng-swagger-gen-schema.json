@@ -19,6 +19,11 @@
       "type": "string",
       "default": "src/app/api"
     },
+    "prefix": {
+      "description": "A prefix to the generated global classes, such as `Configuration` and `Module`. Defaults to 'Api', so the default generated files are `ApiConfiguration` and `ApiModule`.",
+      "type": "string",
+      "default": "Api"
+    },
     "includeTags": {
       "description": "When specified, filters the generated services, including only those corresponding to this list of tags.",
       "type": "array",

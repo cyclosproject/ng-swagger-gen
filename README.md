@@ -178,6 +178,13 @@ argument `--config` or its short form, `-c`, like this:
 ng-swagger-gen --config custom-config.json
 ```
 
+When working with multiple APIs, it is advised to set a different prefix for
+each one. This impacts the generated global files, such as `ApiModule` and
+`ApiConfiguration`. The default prefix is `Api`, leading to those names.
+But, if the specified `prefix` in the configuration file is, for example,
+`Customers`, the generated files will be `CustomersModule`
+and `CustomersConfiguration`. The prefix support has been added in version 1.3.
+
 ### Generating the configuration file
 To generate a configuration file, run the following in the root folder of
 your project;
@@ -197,6 +204,9 @@ The supported properties in the JSON file are:
 - `swagger`: The location of the swagger descriptor in JSON format.
   May be either a local file or URL.
 - `output`: Where generated files will be written to. Defaults to `src/app/api`.
+- `prefix`: A prefix to the generated global classes, such as `Configuration`
+  and `Module`. Defaults to 'Api', so the default generated files are
+  `ApiConfiguration` and `ApiModule`.
 - `includeTags`: When specified, filters the generated services, including only
   those corresponding to this list of tags.
 - `excludeTags`: When specified, filters the generated services, excluding any
@@ -231,7 +241,7 @@ The supported properties in the JSON file are:
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few
-tags to generate, and chose not to generate the ApiModule class:
+tags to generate, and chose not to generate the `ApiModule` class:
 ```json
 {
   "$schema": "./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json",

@@ -3,7 +3,7 @@
   }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{{paramType
   }}}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
-    }}): Observable<HttpResponse<{{{operationResultType}}}>> {
+    }}): Observable<{{{operationHttpResponseType}}}> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;{{#operationIsMultipart}}
@@ -24,19 +24,11 @@
 
     return this.http.request<any>(req).pipe(
       filter(_r => _r instanceof HttpResponse),
-      map(_r => {
-        let _resp = _r as HttpResponse<any>;
-        let _body: {{{operationResultType}}} = null;
-        {{#operationIsString}}_body = _resp.body as string;{{/operationIsString
-        }}{{#operationIsNumber}}_body = parseFloat(_resp.body as string);{{/operationIsNumber
-        }}{{#operationIsBoolean}}_body = _resp.body == 'true';{{/operationIsBoolean
-        }}{{#operationIsEnum}}_body = _resp.body as {{{operationResultType}}};{{/operationIsEnum
-        }}{{#operationIsObject}}_body = _resp.body as {{{operationResultType}}};{{/operationIsObject
-        }}{{#operationIsFile}}_body = _resp.body as Blob;{{/operationIsFile
-        }}{{#operationIsPrimitiveArray}}_body = _resp.body as {{{operationResultType}}};{{/operationIsPrimitiveArray
-        }}{{#operationIsUnknown}}_body = _resp.body as {{{operationResultType}}};{{/operationIsUnknown
-        }}
-        return _resp.clone({body: _body}) as HttpResponse<{{{operationResultType}}}>;
+      map((_r: HttpResponse<any>) => {
+        {{#operationIsVoid}}return _r.clone({ body: null }) as {{{operationHttpResponseType}}}{{/operationIsVoid
+        }}{{#operationIsNumber}}return _r.clone({ body: parseFloat(_r.body as string) }) as {{{operationHttpResponseType}}}{{/operationIsNumber
+        }}{{#operationIsBoolean}}return _r.clone({ body: _r.body === 'true' }) as {{{operationHttpResponseType}}}{{/operationIsBoolean
+        }}{{#operationIsOther}}return _r as {{{operationHttpResponseType}}};{{/operationIsOther}}
       })
     );
   }

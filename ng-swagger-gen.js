@@ -158,6 +158,10 @@ function doGenerate(swagger, options) {
     rmIfExists(modelIndexFile);
   }
 
+  // Write the StrictHttpResponse type
+  var strictHttpResponseFile = output + '/strict-http-response.ts';
+  generate(templates.strictHttpResponse, {}, strictHttpResponseFile);
+
   // Write the services
   var servicesArray = [];
   for (var serviceName in services) {
@@ -1038,6 +1042,7 @@ function processServices(swagger, models, options) {
         operationPath: url,
         operationPathExpression: toPathExpression(paramsClass, url),
         operationResultType: resultType,
+        operationHttpResponseType: 'StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
         operationParameters: operationParameters,
         operationResponses: operationResponses,
@@ -1050,15 +1055,10 @@ function processServices(swagger, models, options) {
       }
       operation.operationIsMultipart = isMultipart;
       operation.operationIsVoid = actualType === 'void';
-      operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
       operation.operationIsBoolean = actualType === 'boolean';
-      operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
-      operation.operationIsObject = modelResult && modelResult.modelIsObject;
-      operation.operationIsPrimitiveArray =
-        !modelResult && (resultType.toString().includes('Array<') ||
-          resultType.toString().includes('[]'));
-      operation.operationIsFile = actualType === 'Blob';
+      operation.operationIsOther =
+        !['void', 'number', 'boolean'].includes(actualType);
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
         operation.operationIsVoid ||

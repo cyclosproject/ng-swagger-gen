@@ -23,8 +23,8 @@
       });
 
     return this.http.request<any>(req).pipe(
-      filter(_r => _r instanceof HttpResponse),
-      map((_r: HttpResponse<any>) => {
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
         {{#operationIsVoid}}return _r.clone({ body: null }) as {{{operationHttpResponseType}}}{{/operationIsVoid
         }}{{#operationIsNumber}}return _r.clone({ body: parseFloat(_r.body as string) }) as {{{operationHttpResponseType}}}{{/operationIsNumber
         }}{{#operationIsBoolean}}return _r.clone({ body: _r.body === 'true' }) as {{{operationHttpResponseType}}}{{/operationIsBoolean

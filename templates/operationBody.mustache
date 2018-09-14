@@ -9,6 +9,6 @@
     }}{{#operationParameters}}{{paramVar}}{{^paramIsLast}}, {{/paramIsLast
     }}{{/operationParameters}}{{/operationParamsClass
     }}).pipe(
-      map(_r => _r.body)
+      __map(_r => _r.body)
     );
   }

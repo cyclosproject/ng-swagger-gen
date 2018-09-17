@@ -4,9 +4,6 @@
 /* jshint -W083 */
 
 const fs = require('fs');
-const url = require('url');
-const http = require('http');
-const https = require('https');
 const path = require('path');
 const Mustache = require('mustache');
 const $RefParser = require('json-schema-ref-parser');
@@ -29,7 +26,9 @@ function ngSwaggerGen(options) {
         `Error reading swagger location ${options.swagger}: ${err}`
       );
     }
-  );
+  ).catch(function (error) {
+    console.error(`Error: ${error}`);
+  });
 }
 
 /**
@@ -41,6 +40,7 @@ function doGenerate(swagger, options) {
   }
 
   var output = options.output || 'src/app/api';
+  var prefix = options.prefix || 'Api';
 
   if (swagger.swagger !== '2.0') {
     console.error(
@@ -94,6 +94,23 @@ function doGenerate(swagger, options) {
     console.info('Wrote ' + file);
   };
 
+  // Calculate the globally used names
+  var moduleClass = toClassName(prefix + 'Module');
+  var moduleFile = toFileName(moduleClass);
+  // Angular's best practices demmands xxx.module.ts, not xxx-module.ts
+  moduleFile = moduleFile.replace(/\-module$/, '.module');
+  var configurationClass = toClassName(prefix + 'Configuration');
+  var configurationFile = toFileName(configurationClass);
+
+  function applyGlobals(to) {
+    to.prefix = prefix;
+    to.moduleClass = moduleClass;
+    to.moduleFile = moduleFile;
+    to.configurationClass = configurationClass;
+    to.configurationFile = configurationFile;
+    return to;
+  }
+
   // Write the models and examples
   var modelsArray = [];
   for (var modelName in models) {
@@ -101,6 +118,8 @@ function doGenerate(swagger, options) {
     if (model.modelIsEnum) {
       model.enumModule = generateEnumModule;
     }
+    applyGlobals(model);
+
     // When the model name differs from the class name, it will be duplicated
     // in the array. For example the-user would be TheUser, and would be twice.
     if (modelsArray.includes(model)) {
@@ -156,12 +175,18 @@ function doGenerate(swagger, options) {
     rmIfExists(modelIndexFile);
   }
 
+  // Write the StrictHttpResponse type
+  var strictHttpResponseFile = output + '/strict-http-response.ts';
+  generate(templates.strictHttpResponse, {}, strictHttpResponseFile);
+
   // Write the services
   var servicesArray = [];
   for (var serviceName in services) {
     var service = services[serviceName];
     service.generalErrorHandler = options.errorHandler !== false;
+    applyGlobals(service);
     servicesArray.push(service);
+
     generate(
       templates.service,
       service,
@@ -197,28 +222,28 @@ function doGenerate(swagger, options) {
     rmIfExists(serviceIndexFile);
   }
 
-  // Write the api module
-  var apiModuleFile = output + '/api.module.ts';
+  // Write the module
+  var fullModuleFile = output + '/' + moduleFile + '.ts';
   if (options.apiModule !== false) {
-    generate(templates.apiModule, { services: servicesArray }, apiModuleFile);
+    generate(templates.module, applyGlobals({
+        services: servicesArray
+      }),
+      fullModuleFile);
   } else if (removeStaleFiles) {
-    rmIfExists(apiModuleFile);
+    rmIfExists(fullModuleFile);
   }
 
-  // Write the ApiConfiguration
+  // Write the configuration
   {
     var schemes = swagger.schemes || [];
     var scheme = schemes.length == 0 ? 'http' : schemes[0];
     var host = swagger.host || 'localhost';
     var basePath = swagger.basePath || '/';
     var rootUrl = scheme + '://' + host + basePath;
-    var context = {
-      rootUrl: rootUrl,
-    };
-    generate(
-      templates.apiConfiguration,
-      context,
-      output + '/api-configuration.ts'
+    generate(templates.configuration, applyGlobals({
+        rootUrl: rootUrl,
+      }),
+      output + '/' + configurationFile + '.ts'
     );
   }
 
@@ -1047,6 +1072,7 @@ function processServices(swagger, models, options) {
         operationPath: url,
         operationPathExpression: toPathExpression(paramsClass, url),
         operationResultType: resultType,
+        operationHttpResponseType: 'StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
         operationParameters: operationParameters,
         operationResponses: operationResponses,
@@ -1059,16 +1085,10 @@ function processServices(swagger, models, options) {
       }
       operation.operationIsMultipart = isMultipart;
       operation.operationIsVoid = actualType === 'void';
-      operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
       operation.operationIsBoolean = actualType === 'boolean';
-      operation.needsParsing = operation.operationIsBoolean || operation.operationIsNumber;
-      operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
-      operation.operationIsObject = modelResult && modelResult.modelIsObject;
-      operation.operationIsPrimitiveArray =
-        !modelResult && (resultType.toString().includes('Array<') ||
-          resultType.toString().includes('[]'));
-      operation.operationIsFile = actualType === 'Blob';
+      operation.operationIsOther =
+        !['void', 'number', 'boolean'].includes(actualType);
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
         operation.operationIsVoid ||

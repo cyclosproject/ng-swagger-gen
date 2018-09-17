@@ -1,12 +1,11 @@
 /* tslint:disable */
 import { Injectable } from '@angular/core';
-import {
-  HttpClient, HttpRequest, HttpResponse,
-  HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpRequest, HttpResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
+import { StrictHttpResponse } from '../strict-http-response';
 import { Observable } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
+import { map as __map, filter as __filter } from 'rxjs/operators';
 
 {{#serviceDependencies}}import { {{modelClass}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}

@@ -3,7 +3,7 @@
   }}{{#operationParameters}}{{paramVar}}{{^paramRequired}}?{{/paramRequired}}: {{{paramType
   }}}{{^paramIsLast}},
     {{/paramIsLast}}{{/operationParameters}}{{/operationParamsClass
-    }}): Observable<DataHttpResponse<{{{operationResultType}}}>> {
+    }}): Observable<{{{operationHttpResponseType}}}> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;{{#operationIsMultipart}}
@@ -21,26 +21,14 @@
         params: __params,
         responseType: '{{{operationResponseType}}}'
       });
-    {{^needsParsing}}
+
     return this.http.request<any>(req).pipe(
-      filter(_r => _r instanceof HttpResponse)) as Observable<DataHttpResponse<{{{operationResultType}}}>>;{{/needsParsing}}
-    {{#needsParsing}}
-    return this.http.request<any>(req).pipe(
-      filter(_r => _r instanceof HttpResponse),
-      map(_r => {
-        let _resp = _r as HttpResponse<any>;
-        const _body: {{{operationResultType}}} = {{#operationIsString}} _resp.body as string;{{/operationIsString
-        }}{{#operationIsNumber}}parseFloat(_resp.body as string);{{/operationIsNumber
-        }}{{#operationIsBoolean}}_resp.body == 'true';{{/operationIsBoolean
-        }}{{#operationIsEnum}}_resp.body as {{{operationResultType}}};{{/operationIsEnum
-        }}{{#operationIsObject}}_resp.body as {{{operationResultType}}};{{/operationIsObject
-        }}{{#operationIsFile}}_resp.body as Blob;{{/operationIsFile
-        }}{{#operationIsPrimitiveArray}}_resp.body as {{{operationResultType}}};{{/operationIsPrimitiveArray
-        }}{{#operationIsUnknown}}_resp.body as {{{operationResultType}}};{{/operationIsUnknown
-        }}{{#operationIsVoid}}null;{{/operationIsVoid
-        }}
-        return _resp.clone({body: _body}) as DataHttpResponse<{{{operationResultType}}}>;
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r) => {
+        {{#operationIsVoid}}return (_r as HttpResponse<any>).clone({ body: null }) as {{{operationHttpResponseType}}}{{/operationIsVoid
+        }}{{#operationIsNumber}}return (_r as HttpResponse<any>).clone({ body: parseFloat((_r as HttpResponse<any>).body as string) }) as {{{operationHttpResponseType}}}{{/operationIsNumber
+        }}{{#operationIsBoolean}}return (_r as HttpResponse<any>).clone({ body: (_r as HttpResponse<any>).body === 'true' }) as {{{operationHttpResponseType}}}{{/operationIsBoolean
+        }}{{#operationIsOther}}return _r as {{{operationHttpResponseType}}};{{/operationIsOther}}
       })
     );
-    {{/needsParsing}}
   }

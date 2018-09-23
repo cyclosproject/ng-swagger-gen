@@ -1,6 +1,6 @@
 /* tslint:disable */
 import { HttpClient, HttpParameterCodec, HttpParams } from '@angular/common/http';
-import { ApiConfiguration } from './api-configuration';
+import { {{ configurationClass }} } from './{{configurationFile}}';
 
 /**
  * Custom parameter codec to correctly handle the plus sign in parameter

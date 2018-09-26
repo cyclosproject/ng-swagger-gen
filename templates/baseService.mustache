@@ -30,7 +30,7 @@ const PARAMETER_CODEC = new ParameterCodec();
  */
 export class BaseService {
   constructor(
-    protected config: ApiConfiguration,
+    protected config: {{ configurationClass }},
     protected http: HttpClient
   ) {
   }

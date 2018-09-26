@@ -14,7 +14,7 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
 })
 class {{serviceClass}} extends BaseService {
   constructor(
-    config: ApiConfiguration,
+    config: {{ configurationClass }},
     http: HttpClient
   ) {
     super(config, http);

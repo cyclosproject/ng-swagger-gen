@@ -661,7 +661,10 @@ function processModels(swagger, options) {
  * For example, "Array<a>" returns "a", "a[]" returns "a", while "b" returns "b".
  * A special case is for inline objects. In this case, the result is "object".
  */
-function removeBrackets(type) {
+function removeBrackets(type, nullOrUndefinedOnly) {
+  if(typeof nullOrUndefinedOnly === "undefined") {
+    nullOrUndefinedOnly = false;
+  }
   if (typeof type == 'object') {
     return 'object';
   }
@@ -674,7 +677,7 @@ function removeBrackets(type) {
   else if(type.indexOf('undefined|')===0) { // Not used currently, but robust code is better code :)
     return removeBrackets(type.substr('undefined|'.length))
   }
-  if (type == null || type.length === 0) {
+  if (type == null || type.length === 0 || nullOrUndefinedOnly) {
     return type;
   }
   var pos = type.indexOf('Array<');
@@ -985,6 +988,7 @@ function processServices(swagger, models, options) {
         } else {
           paramType = propertyType(param);
         }
+        var paramTypeNoNull = removeBrackets(paramType, true);
         var paramVar = toIdentifier(param.name);
         var paramDescriptor = {
           paramName: param.name,
@@ -998,8 +1002,8 @@ function processServices(swagger, models, options) {
           paramIsBody: param.in === 'body',
           paramIsFormData: param.in === 'formData',
           paramIsArray: param.type === 'array',
-          paramToJson: param.in === 'formData' && paramType !== 'Blob' &&
-            paramType !== 'string',
+          paramToJson: param.in === 'formData' && paramTypeNoNull !== 'Blob' &&
+            paramTypeNoNull !== 'string',
           paramDescription: param.description,
           paramComments: toComments(param.description, 2),
           paramType: paramType,

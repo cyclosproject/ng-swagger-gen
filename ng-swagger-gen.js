@@ -249,7 +249,7 @@ function doGenerate(swagger, options) {
 
   // Write the BaseService
   {
-    generate(templates.baseService, {}, output + '/base-service.ts');
+    generate(templates.baseService, applyGlobals({}), output + '/base-service.ts');
   }
 }
 

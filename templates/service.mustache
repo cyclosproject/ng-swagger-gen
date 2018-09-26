@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { BaseService } from '../base-service';
-import { ApiConfiguration } from '../api-configuration';
+import { {{ configurationClass }} } from '../{{configurationFile}}';
 import { StrictHttpResponse } from '../strict-http-response';
 import { Observable } from 'rxjs';
 import { map as __map, filter as __filter } from 'rxjs/operators';
@@ -14,7 +14,7 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
 })
 class {{serviceClass}} extends BaseService {
   constructor(
-    config: ApiConfiguration,
+    config: {{ configurationClass }},
     http: HttpClient
   ) {
     super(config, http);

@@ -1078,14 +1078,20 @@ function processServices(swagger, models, options) {
       var actualType = resultType;
       if (modelResult && modelResult.modelIsSimple) {
         actualType = modelResult.modelSimpleType;
-        var actualModel = models[removeBrackets(actualType)];
       }
       operation.operationIsMultipart = isMultipart;
       operation.operationIsVoid = actualType === 'void';
+      operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
-      operation.operationIsBoolean = actualType === 'boolean';
       operation.operationIsOther =
         !['void', 'number', 'boolean'].includes(actualType);
+      operation.operationIsBoolean = actualType === 'boolean';
+      operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
+      operation.operationIsObject = modelResult && modelResult.modelIsObject;
+      operation.operationIsPrimitiveArray =
+        !modelResult && (resultType.toString().includes('Array<') ||
+          resultType.toString().includes('[]'));
+      operation.operationIsFile = actualType === 'Blob';
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
         operation.operationIsVoid ||

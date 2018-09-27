@@ -249,7 +249,7 @@ function doGenerate(swagger, options) {
 
   // Write the BaseService
   {
-    generate(templates.baseService, {}, output + '/base-service.ts');
+    generate(templates.baseService, applyGlobals({}), output + '/base-service.ts');
   }
 }
 
@@ -745,7 +745,15 @@ function propertyType(property) {
           def += ', ';
         }
         type = propertyType(property.additionalProperties);
-        if (allTypes.indexOf(type) < 0) {
+        if (typeof type === 'object') {
+          // A nested object
+          (type.allTypes || []).forEach(t => {
+            if (!allTypes.includes(t)) {
+              allTypes.push(t);
+            }
+          });
+          type = type.toString();
+        } else if (allTypes.indexOf(type) < 0) {
           allTypes.push(type);
         }
         def += '[key: string]: ' + type;
@@ -935,7 +943,7 @@ function processServices(swagger, models, options) {
   var sortParams = options.sortParams || 'desc';
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
-	var methodParameters = path['parameters'];
+	  var methodParameters = path.parameters;
     for (var method in path || {}) {
       var def = path[method];
       if (!def) {

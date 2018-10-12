@@ -237,9 +237,10 @@ function doGenerate(swagger, options) {
   {
     var schemes = swagger.schemes || [];
     var scheme = schemes.length == 0 ? 'http' : schemes[0];
-    var host = swagger.host || 'localhost';
     var basePath = swagger.basePath || '/';
-    var rootUrl = scheme + '://' + host + basePath;
+    var rootUrl = swagger.host
+      ? scheme + '://' + swagger.host + basePath
+      : basePath.replace(/^\/?/, '/');
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
       }),

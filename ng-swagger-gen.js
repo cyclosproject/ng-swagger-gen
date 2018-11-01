@@ -237,9 +237,10 @@ function doGenerate(swagger, options) {
   {
     var schemes = swagger.schemes || [];
     var scheme = schemes.length == 0 ? 'http' : schemes[0];
-    var host = swagger.host || 'localhost';
     var basePath = swagger.basePath || '/';
-    var rootUrl = scheme + '://' + host + basePath;
+    var rootUrl = swagger.host
+      ? scheme + '://' + swagger.host + basePath
+      : basePath.replace(/^\/?/, '/');
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
       }),
@@ -623,14 +624,6 @@ function processModels(swagger, options) {
       dependencies.add(model.modelParent.modelName);
     }
 
-    // The subclasses are dependencies
-    if (model.modelSubclasses) {
-      for (i = 0; i < model.modelSubclasses.length; i++) {
-        var child = model.modelSubclasses[i];
-        dependencies.add(child.modelName);
-      }
-    }
-
     // Each property may add a dependency
     if (model.modelProperties) {
       for (i = 0; i < model.modelProperties.length; i++) {
@@ -846,9 +839,14 @@ function processResponses(def, path, models) {
  * "/a/{var1}/b/{var2}/" returns "/a/${params.var1}/b/${params.var2}"
  * if there is a parameters class, or "/a/${var1}/b/${var2}" otherwise.
  */
-function toPathExpression(paramsClass, path) {
-  var repl = paramsClass == null ? '$${' : '$${params.';
-  return (path || '').replace(/\{/g, repl);
+function toPathExpression(operationParameters, paramsClass, path) {
+  return (path || '').replace(/\{([^}]+)}/g, (_, pName) => {
+    const param = operationParameters.find(p => p.paramName === pName);
+    const paramName = param ? param.paramVar : pName;
+    return paramsClass ?
+      "${params." + paramName + "}" :
+      "${" + paramName + "}";
+  });
 }
 
 /**
@@ -1082,7 +1080,8 @@ function processServices(swagger, models, options) {
         operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),
         operationPath: url,
-        operationPathExpression: toPathExpression(paramsClass, url),
+        operationPathExpression:
+          toPathExpression(operationParameters, paramsClass, url),
         operationResultType: resultType,
         operationHttpResponseType: 'StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
@@ -1093,14 +1092,20 @@ function processServices(swagger, models, options) {
       var actualType = resultType;
       if (modelResult && modelResult.modelIsSimple) {
         actualType = modelResult.modelSimpleType;
-        var actualModel = models[removeBrackets(actualType)];
       }
       operation.operationIsMultipart = isMultipart;
       operation.operationIsVoid = actualType === 'void';
+      operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
-      operation.operationIsBoolean = actualType === 'boolean';
       operation.operationIsOther =
         !['void', 'number', 'boolean'].includes(actualType);
+      operation.operationIsBoolean = actualType === 'boolean';
+      operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
+      operation.operationIsObject = modelResult && modelResult.modelIsObject;
+      operation.operationIsPrimitiveArray =
+        !modelResult && (resultType.toString().includes('Array<') ||
+          resultType.toString().includes('[]'));
+      operation.operationIsFile = actualType === 'Blob';
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
         operation.operationIsVoid ||
@@ -1142,6 +1147,11 @@ function processServices(swagger, models, options) {
     for (i = 0; i < service.serviceOperations.length; i++) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
+        var status = Number(code);
+        if (status < 200 || status >= 300) {
+          // Ignore dependencies for generated error models
+          continue;
+        }
         var response = op.operationResponses[code];
         if (response.type) {
           var type = response.type;

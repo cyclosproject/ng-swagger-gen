@@ -832,9 +832,14 @@ function processResponses(def, path, models) {
  * "/a/{var1}/b/{var2}/" returns "/a/${params.var1}/b/${params.var2}"
  * if there is a parameters class, or "/a/${var1}/b/${var2}" otherwise.
  */
-function toPathExpression(paramsClass, path) {
-  var repl = paramsClass == null ? '$${' : '$${params.';
-  return (path || '').replace(/\{/g, repl);
+function toPathExpression(operationParameters, paramsClass, path) {
+  return (path || '').replace(/\{([^}]+)}/g, (_, pName) => {
+    const param = operationParameters.find(p => p.paramName === pName);
+    const paramName = param ? param.paramVar : pName;
+    return paramsClass ?
+      "${params." + paramName + "}" :
+      "${" + paramName + "}";
+  });
 }
 
 /**
@@ -1067,7 +1072,8 @@ function processServices(swagger, models, options) {
         operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),
         operationPath: url,
-        operationPathExpression: toPathExpression(paramsClass, url),
+        operationPathExpression:
+          toPathExpression(operationParameters, paramsClass, url),
         operationResultType: resultType,
         operationHttpResponseType: 'StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),

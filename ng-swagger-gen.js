@@ -623,14 +623,6 @@ function processModels(swagger, options) {
       dependencies.add(model.modelParent.modelName);
     }
 
-    // The subclasses are dependencies
-    if (model.modelSubclasses) {
-      for (i = 0; i < model.modelSubclasses.length; i++) {
-        var child = model.modelSubclasses[i];
-        dependencies.add(child.modelName);
-      }
-    }
-
     // Each property may add a dependency
     if (model.modelProperties) {
       for (i = 0; i < model.modelProperties.length; i++) {
@@ -1139,6 +1131,11 @@ function processServices(swagger, models, options) {
     for (i = 0; i < service.serviceOperations.length; i++) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
+        var status = Number(code);
+        if (status < 200 || status >= 300) {
+          // Ignore dependencies for generated error models
+          continue;
+        }
         var response = op.operationResponses[code];
         if (response.type) {
           var type = response.type;

@@ -654,11 +654,23 @@ function processModels(swagger, options) {
  * For example, "Array<a>" returns "a", "a[]" returns "a", while "b" returns "b".
  * A special case is for inline objects. In this case, the result is "object".
  */
-function removeBrackets(type) {
+function removeBrackets(type, nullOrUndefinedOnly) {
+  if(typeof nullOrUndefinedOnly === "undefined") {
+    nullOrUndefinedOnly = false;
+  }
   if (typeof type == 'object') {
     return 'object';
   }
-  if (type == null || type.length === 0) {
+  else if(type.replace(/ /g, '') !== type) {
+    return removeBrackets(type.replace(/ /g, ''));
+  }
+  else if(type.indexOf('null|')===0) {
+    return removeBrackets(type.substr('null|'.length))
+  }
+  else if(type.indexOf('undefined|')===0) { // Not used currently, but robust code is better code :)
+    return removeBrackets(type.substr('undefined|'.length))
+  }
+  if (type == null || type.length === 0 || nullOrUndefinedOnly) {
     return type;
   }
   var pos = type.indexOf('Array<');
@@ -676,15 +688,17 @@ function removeBrackets(type) {
 function propertyType(property) {
   var type;
   if (property == null) {
-    return 'void';
+    return 'null';
   } else if (property.$ref != null) {
     // Type is a reference
     return simpleRef(property.$ref);
   } else if (property['x-type']) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
-    return type.length == 0 ? 'void' : type;
-  }
+    return type.length == 0 ? 'null' : type;
+  } else if(property['x-nullable']) {
+    return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
+  }  
   switch (property.type) {
     case 'string':
       if (property.enum && property.enum.length > 0) {
@@ -815,7 +829,7 @@ function processResponses(def, path, models) {
     };
   }
   if (!operationResponses.resultType) {
-    operationResponses.resultType = 'void';
+    operationResponses.resultType = 'null';
   }
   return operationResponses;
 }
@@ -980,6 +994,7 @@ function processServices(swagger, models, options) {
         } else {
           paramType = propertyType(param);
         }
+        var paramTypeNoNull = removeBrackets(paramType, true);
         var paramVar = toIdentifier(param.name);
         var paramDescriptor = {
           paramName: param.name,
@@ -993,8 +1008,8 @@ function processServices(swagger, models, options) {
           paramIsBody: param.in === 'body',
           paramIsFormData: param.in === 'formData',
           paramIsArray: param.type === 'array',
-          paramToJson: param.in === 'formData' && paramType !== 'Blob' &&
-            paramType !== 'string',
+          paramToJson: param.in === 'formData' && paramTypeNoNull !== 'Blob' &&
+            paramTypeNoNull !== 'string',
           paramDescription: param.description,
           paramComments: toComments(param.description, 2),
           paramType: paramType,

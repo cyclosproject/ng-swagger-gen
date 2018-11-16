@@ -281,7 +281,7 @@ function applyTagFilter(models, services, options) {
   // Filter out the unused models
   var ignoreUnusedModels = options.ignoreUnusedModels !== false;
   var usedModels = new Set();
-  const addToUsed = (dep, index) => usedModels.add(dep);
+  const addToUsed = (dep) => usedModels.add(dep);
   for (var serviceName in services) {
     var include =
       (!included || included.indexOf(serviceName) >= 0) &&
@@ -296,6 +296,7 @@ function applyTagFilter(models, services, options) {
       // Collect the models used by this service
       var service = services[serviceName];
       service.serviceDependencies.forEach(addToUsed);
+      service.serviceErrorDependencies.forEach(addToUsed);
     }
   }
 
@@ -1144,22 +1145,21 @@ function processServices(swagger, models, options) {
   for (name in services) {
     var service = services[name];
     var dependencies = new DependenciesResolver(models);
+    var errorDependencies = new DependenciesResolver(models);
     for (i = 0; i < service.serviceOperations.length; i++) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var status = Number(code);
-        if (status < 200 || status >= 300) {
-          // Ignore dependencies for generated error models
-          continue;
-        }
+        var actualDeps = (status < 200 || status >= 300) 
+          ? errorDependencies : dependencies;
         var response = op.operationResponses[code];
         if (response.type) {
           var type = response.type;
           if (type && type.allTypes) {
             // This is an inline object. Append all types
-            type.allTypes.forEach(t => dependencies.add(t));
+            type.allTypes.forEach(t => actualDeps.add(t));
           } else {
-            dependencies.add(type);
+            actualDeps.add(type);
           }
         }
       }
@@ -1169,6 +1169,7 @@ function processServices(swagger, models, options) {
       }
     }
     service.serviceDependencies = dependencies.get();
+    service.serviceErrorDependencies = errorDependencies.get();
   }
 
   return services;

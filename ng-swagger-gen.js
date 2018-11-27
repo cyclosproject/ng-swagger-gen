@@ -858,7 +858,7 @@ function toIdentifier(string) {
   var wasSep = false;
   for (var i = 0; i < string.length; i++) {
     var c = string.charAt(i);
-    if (/[a-z|A-Z|0-9]/.test(c)) {
+    if (/[a-zA-Z0-9]/.test(c)) {
       if (wasSep) {
         c = c.toUpperCase();
         wasSep = false;

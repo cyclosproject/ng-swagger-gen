@@ -235,12 +235,23 @@ function doGenerate(swagger, options) {
 
   // Write the configuration
   {
+    // Following code ported from io.swagger.codegen.DefaultGenerator#getHost (https://github.com/swagger-api/swagger-codegen)
     var schemes = swagger.schemes || [];
-    var scheme = schemes.length == 0 ? 'http' : schemes[0];
-    var basePath = swagger.basePath || '/';
-    var rootUrl = swagger.host
-      ? scheme + '://' + swagger.host + basePath
-      : basePath.replace(/^\/?/, '/');
+    var scheme = schemes.length === 0 ? 'https' : schemes[0];
+    var rootUrlBuilder = [];
+    rootUrlBuilder.push(scheme);
+    rootUrlBuilder.push('://');
+    if (swagger.hasOwnProperty('host') && swagger.host !== '') {
+      rootUrlBuilder.push(swagger.host);
+    } else {
+      rootUrlBuilder.push('localhost');
+      console.warn('\'host\' not defined in the spec. Default to \'localhost\'.');
+    }
+    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== '' && swagger.basePath !== '/') {
+      rootUrlBuilder.push(swagger.basePath);
+    }
+    var rootUrl = rootUrlBuilder.join('');
+
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
       }),
@@ -699,7 +710,7 @@ function propertyType(property) {
     return type.length == 0 ? 'null' : type;
   } else if(property['x-nullable']) {
     return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
-  }  
+  }
   switch (property.type) {
     case 'string':
       if (property.enum && property.enum.length > 0) {
@@ -1150,7 +1161,7 @@ function processServices(swagger, models, options) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var status = Number(code);
-        var actualDeps = (status < 200 || status >= 300) 
+        var actualDeps = (status < 200 || status >= 300)
           ? errorDependencies : dependencies;
         var response = op.operationResponses[code];
         if (response.type) {

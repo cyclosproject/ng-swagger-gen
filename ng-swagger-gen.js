@@ -32,7 +32,7 @@ function ngSwaggerGen(options) {
 }
 
 /**
- * Proceedes with the generation given the parsed swagger object
+ * Proceeds with the generation given the parsed swagger object
  */
 function doGenerate(swagger, options) {
   if (!options.templates) {
@@ -97,7 +97,7 @@ function doGenerate(swagger, options) {
   // Calculate the globally used names
   var moduleClass = toClassName(prefix + 'Module');
   var moduleFile = toFileName(moduleClass);
-  // Angular's best practices demmands xxx.module.ts, not xxx-module.ts
+  // Angular's best practices demands xxx.module.ts, not xxx-module.ts
   moduleFile = moduleFile.replace(/\-module$/, '.module');
   var configurationClass = toClassName(prefix + 'Configuration');
   var configurationFile = toFileName(configurationClass);
@@ -413,7 +413,7 @@ function toClassName(name) {
 }
 
 /**
- * Сonverts a given type name into a file name of the example file
+ * Converts a given type name into a file name of the example file
  * @param typeName
  */
 function toExampleFileName(typeName) {

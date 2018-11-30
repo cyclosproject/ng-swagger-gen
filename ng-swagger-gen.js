@@ -39,7 +39,7 @@ function doGenerate(swagger, options) {
     options.templates = path.join(__dirname, 'templates');
   }
 
-  var output = options.output || 'src/app/api';
+  var output = path.normalize(options.output || 'src/app/api');
   var prefix = options.prefix || 'Api';
 
   if (swagger.swagger !== '2.0') {
@@ -78,8 +78,8 @@ function doGenerate(swagger, options) {
   });
 
   // Prepare the output folder
-  const modelsOutput = path.join(output, '/models');
-  const servicesOutput = path.join(output, '/services');
+  const modelsOutput = path.join(output, 'models');
+  const servicesOutput = path.join(output, 'services');
   mkdirs(modelsOutput);
   mkdirs(servicesOutput);
 
@@ -129,7 +129,7 @@ function doGenerate(swagger, options) {
     generate(
       templates.model,
       model,
-      modelsOutput + '/' + model.modelFile + '.ts'
+      path.join(modelsOutput, model.modelFile + '.ts')
     );
     if (options.generateExamples && model.modelExample) {
       var example = JSON.stringify(model.modelExample, null, 2);
@@ -140,7 +140,7 @@ function doGenerate(swagger, options) {
       generate(
         templates.example,
         model,
-        modelsOutput + '/' + model.modelExampleFile + '.ts'
+        path.join(modelsOutput, model.modelExampleFile + '.ts')
       );
     }
   }
@@ -168,7 +168,7 @@ function doGenerate(swagger, options) {
   }
 
   // Write the model index
-  var modelIndexFile = output + '/models.ts';
+  var modelIndexFile = path.join(output, 'models.ts');
   if (options.modelIndex !== false) {
     generate(templates.models, { models: modelsArray }, modelIndexFile);
   } else if (removeStaleFiles) {
@@ -176,8 +176,8 @@ function doGenerate(swagger, options) {
   }
 
   // Write the StrictHttpResponse type
-  var strictHttpResponseFile = output + '/strict-http-response.ts';
-  generate(templates.strictHttpResponse, {}, strictHttpResponseFile);
+  generate(templates.strictHttpResponse, {},
+    path.join(output, 'strict-http-response.ts'));
 
   // Write the services
   var servicesArray = [];
@@ -190,7 +190,7 @@ function doGenerate(swagger, options) {
     generate(
       templates.service,
       service,
-      servicesOutput + '/' + service.serviceFile + '.ts'
+      path.join(servicesOutput, service.serviceFile + '.ts')
     );
   }
   if (servicesArray.length > 0) {
@@ -215,7 +215,7 @@ function doGenerate(swagger, options) {
   }
 
   // Write the service index
-  var serviceIndexFile = output + '/services.ts';
+  var serviceIndexFile = path.join(output, 'services.ts');
   if (options.serviceIndex !== false) {
     generate(templates.services, { services: servicesArray }, serviceIndexFile);
   } else if (removeStaleFiles) {
@@ -223,7 +223,7 @@ function doGenerate(swagger, options) {
   }
 
   // Write the module
-  var fullModuleFile = output + '/' + moduleFile + '.ts';
+  var fullModuleFile = path.join(output, moduleFile + '.ts');
   if (options.apiModule !== false) {
     generate(templates.module, applyGlobals({
         services: servicesArray
@@ -244,13 +244,14 @@ function doGenerate(swagger, options) {
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
       }),
-      output + '/' + configurationFile + '.ts'
+      path.join(output, configurationFile + '.ts')
     );
   }
 
   // Write the BaseService
   {
-    generate(templates.baseService, applyGlobals({}), output + '/base-service.ts');
+    generate(templates.baseService, applyGlobals({}), 
+      path.join(output, 'base-service.ts'));
   }
 }
 

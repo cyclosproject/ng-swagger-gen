@@ -236,7 +236,7 @@ function doGenerate(swagger, options) {
   // Write the configuration
   {
     var schemes = swagger.schemes || [];
-    var protocol = schemes.length == 0 ? '//' : schemes[0] + '://';
+    var protocol = schemes.length == 0 ? options.defaultProtocol : schemes[0] + '://';
     var basePath = swagger.basePath || '/';
     var rootUrl = swagger.host
       ? protocol + swagger.host + basePath

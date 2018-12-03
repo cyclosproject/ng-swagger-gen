@@ -238,6 +238,7 @@ The supported properties in the JSON file are:
   section, will generate a corresponding `<model>.example.ts` file, exporting a
   function called `get<Model>Example()`, which will return the data present in
   the example section.
+- `defualtProtocol`: When the Swagger descriptor 'schema' property is null or empty the protocol will be assigned this value, otherwise    the first schema will be used. Note: you must supply the schema postfix IE `HTTP://`. Defaults to relative path `//`.
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few

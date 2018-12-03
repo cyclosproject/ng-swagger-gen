@@ -94,6 +94,11 @@
       "description": "Indicates whether or not to generate the example files from the example sections of the models. Defaults to false.",
       "type": "boolean",
       "default": "false"
+    },
+    "defaultProtocol": {
+       "description": "When the Swagger descriptor 'schema' property is null or empty the protocol will be assigned this value, otherwise the first schema will be used. Defaults to relative path '//'.",
+       "type": "string",
+       "default": "//"
     }
   }
 }

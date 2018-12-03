@@ -236,14 +236,15 @@ function doGenerate(swagger, options) {
   // Write the configuration
   {
     var schemes = swagger.schemes || [];
-    var scheme = schemes.length == 0 ? 'http' : schemes[0];
+    var protocol = schemes.length == 0 ? '//' : schemes[0] + '://';
     var basePath = swagger.basePath || '/';
     var rootUrl = swagger.host
-      ? scheme + '://' + swagger.host + basePath
+      ? protocol + swagger.host + basePath
       : basePath.replace(/^\/?/, '/');
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
       }),
+      
       path.join(output, configurationFile + '.ts')
     );
   }

@@ -235,17 +235,16 @@ function doGenerate(swagger, options) {
 
   // Write the configuration
   {
-    // Following code ported from io.swagger.codegen.DefaultGenerator#getHost (https://github.com/swagger-api/swagger-codegen)
-    var schemes = swagger.schemes || [];
-    var scheme = schemes.length === 0 ? 'https' : schemes[0];
+    // Following code ported from io.swagger.codegen.DefaultGenerator#getHost with some changes for issue #113
     var rootUrlBuilder = [];
-    rootUrlBuilder.push(scheme);
-    rootUrlBuilder.push('://');
     if (swagger.hasOwnProperty('host') && swagger.host !== '') {
+      var schemes = swagger.schemes || [];
+      var scheme = schemes.length === 0 ? 'https' : schemes[0];
+      rootUrlBuilder.push(scheme);
+      rootUrlBuilder.push('://');
       rootUrlBuilder.push(swagger.host);
     } else {
-      rootUrlBuilder.push('localhost');
-      console.warn('\'host\' not defined in the spec. Default to \'localhost\'.');
+      console.warn('\'host\' not defined in the spec. Default to relative basePath only.');
     }
     if (swagger.hasOwnProperty('basePath') && swagger.basePath !== '' && swagger.basePath !== '/') {
       rootUrlBuilder.push(swagger.basePath);

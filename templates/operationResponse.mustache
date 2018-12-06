@@ -6,6 +6,9 @@
     }}): Observable<{{{operationHttpResponseType}}}> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
+	
+	    __headers = __headers.set('Content-Type', 'application/json');
+		
     let __body: any = null;{{#operationIsMultipart}}
     __headers.append('Content-Type', 'multipart/form-data');
     let __formData = new FormData();
@@ -22,13 +25,19 @@
         responseType: '{{{operationResponseType}}}'
       });
 
-    return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
-      __map((_r) => {
-        {{#operationIsVoid}}return (_r as HttpResponse<any>).clone({ body: null }) as {{{operationHttpResponseType}}}{{/operationIsVoid
-        }}{{#operationIsNumber}}return (_r as HttpResponse<any>).clone({ body: parseFloat((_r as HttpResponse<any>).body as string) }) as {{{operationHttpResponseType}}}{{/operationIsNumber
-        }}{{#operationIsBoolean}}return (_r as HttpResponse<any>).clone({ body: (_r as HttpResponse<any>).body === 'true' }) as {{{operationHttpResponseType}}}{{/operationIsBoolean
-        }}{{#operationIsOther}}return _r as {{{operationHttpResponseType}}};{{/operationIsOther}}
-      })
-    );
+	return new Observable<{{{operationHttpResponseType}}}>((observer) => { 
+		return this.http.request<any>(req).pipe(
+			__filter(_r => _r instanceof HttpResponse),
+			__map((_r: HttpResponse<any>) => {
+			{{#operationIsVoid}}return _r.clone({ body: null }) as {{{operationHttpResponseType}}}{{/operationIsVoid
+			}}{{#operationIsNumber}}return _r.clone({ body: parseFloat(_r.body as string) }) as {{{operationHttpResponseType}}}{{/operationIsNumber
+			}}{{#operationIsBoolean}}return _r.clone({ body: _r.body === 'true' }) as {{{operationHttpResponseType}}}{{/operationIsBoolean
+			}}{{#operationIsOther}}return _r as {{{operationHttpResponseType}}};{{/operationIsOther}}
+			})
+		)        
+		.subscribe(
+			data =>    observer.next(data),
+			err =>    observer.error(err)   
+		)
+	});  
   }

@@ -440,19 +440,19 @@ function simpleRef(ref) {
 function toEnumName(value) {
   var result = '';
   var wasLower = false;
+  value = value.replace(/[^\w]/g, '_');
   for (var i = 0; i < value.length; i++) {
     var c = value.charAt(i);
-    var isLower = /[a-z]/.test(c);
-    if (!isLower && wasLower) {
+    var isLowerOrUScore = /[a-z_]/.test(c);
+    if (!isLowerOrUScore && wasLowerOrUScore) {
       result += '_';
     }
     result += c.toUpperCase();
-    wasLower = isLower;
+    wasLowerOrUScore = isLowerOrUScore;
   }
   if (!isNaN(value[0])) {
     result = '_' + result;
   }
-  result = result.replace(/[^\w]/g, '_');
   return result;
 }
 

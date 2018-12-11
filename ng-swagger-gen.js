@@ -700,7 +700,13 @@ function propertyType(property) {
     return type.length == 0 ? 'null' : type;
   } else if(property['x-nullable']) {
     return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
-  }  
+  } else if (!property.type && (property.anyOf || property.oneOf)) {
+    let variants = (property.anyOf || property.oneOf).map(propertyType);
+    return {
+      allTypes: variants.map(variant => variant.allTypes || variant),
+      toString: () => variants.join(' | ')
+    };
+  }
   switch (property.type) {
     case 'string':
       if (property.enum && property.enum.length > 0) {

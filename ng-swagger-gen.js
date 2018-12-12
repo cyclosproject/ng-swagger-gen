@@ -708,8 +708,15 @@ function propertyType(property) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
     return type.length == 0 ? 'null' : type;
-  } else if(property['x-nullable']) {
-    return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
+  } else if (property['x-nullable']) {
+    return 'null | ' + propertyType(
+      Object.assign(property, {'x-nullable': undefined}));
+  } else if (!property.type && (property.anyOf || property.oneOf)) {
+    let variants = (property.anyOf || property.oneOf).map(propertyType);
+    return {
+      allTypes: variants.map(variant => variant.allTypes || variant),
+      toString: () => variants.join(' | ')
+    };
   }
   switch (property.type) {
     case 'string':

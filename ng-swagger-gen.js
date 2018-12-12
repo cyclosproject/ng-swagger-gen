@@ -642,7 +642,7 @@ function processModels(swagger, options) {
 
     // If an array, the element type is a dependency
     if (model.modelElementType) {
-      dependencies.add(model.modelElementType);
+      model.modelElementType.allTypes.forEach(addToDependencies);
     }
 
     model.modelDependencies = dependencies.get();
@@ -685,6 +685,21 @@ function removeBrackets(type, nullOrUndefinedOnly) {
 }
 
 /**
+ * Combine dependencies of multiple types.
+ * @param types
+ * @return {Array}
+ */
+function mergeTypes(...types) {
+  let allTypes = [];
+  types.forEach(type => {
+    (type.allTypes || [type]).forEach(type => {
+      if (allTypes.indexOf(type) < 0) allTypes.push(type);
+    });
+  });
+  return allTypes;
+}
+
+/**
  * Returns the TypeScript property type for the given raw property
  */
 function propertyType(property) {
@@ -703,7 +718,7 @@ function propertyType(property) {
   } else if (!property.type && (property.anyOf || property.oneOf)) {
     let variants = (property.anyOf || property.oneOf).map(propertyType);
     return {
-      allTypes: variants.map(variant => variant.allTypes || variant),
+      allTypes: mergeTypes(...variants),
       toString: () => variants.join(' | ')
     };
   }
@@ -714,7 +729,26 @@ function propertyType(property) {
       }
       return 'string';
     case 'array':
-      return 'Array<' + propertyType(property.items) + '>';
+      if (Array.isArray(property.items)) { // support for tuples
+        if (!property.maxItems) return 'Array<any>'; // there is unable to define unlimited tuple in TypeScript
+        let minItems = property.minItems || 0,
+            maxItems = property.maxItems,
+            types = property.items.map(propertyType);
+        types.push(property.additionalItems ? propertyType(property.additionalItems) : 'any');
+        let variants = [];
+        for (let i = minItems; i <= maxItems; i++) variants.push(types.slice(0, i));
+        return {
+          allTypes: mergeTypes(...types.slice(0, maxItems)),
+          toString: () => variants.map(types => `[${types.join(', ')}]`).join(' | ')
+        };
+      }
+      else {
+        let itemType = propertyType(property.items);
+        return {
+          allTypes: mergeTypes(itemType),
+          toString: () => 'Array<' + itemType + '>'
+        };
+      }
     case 'integer':
     case 'number':
       return 'number';

@@ -235,12 +235,22 @@ function doGenerate(swagger, options) {
 
   // Write the configuration
   {
-    var schemes = swagger.schemes || [];
-    var scheme = schemes.length == 0 ? 'http' : schemes[0];
-    var basePath = swagger.basePath || '/';
-    var rootUrl = swagger.host
-      ? scheme + '://' + swagger.host + basePath
-      : basePath.replace(/^\/?/, '/');
+    // Following code ported from io.swagger.codegen.DefaultGenerator#getHost with some changes for issue #113
+    var rootUrlBuilder = [];
+    if (swagger.hasOwnProperty('host') && swagger.host !== '') {
+      var schemes = swagger.schemes || [];
+      var scheme = schemes.length === 0 ? 'https' : schemes[0];
+      rootUrlBuilder.push(scheme);
+      rootUrlBuilder.push('://');
+      rootUrlBuilder.push(swagger.host);
+    } else {
+      console.warn('\'host\' not defined in the spec. Default to relative basePath only.');
+    }
+    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== '' && swagger.basePath !== '/') {
+      rootUrlBuilder.push(swagger.basePath);
+    }
+    var rootUrl = rootUrlBuilder.join('');
+
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
       }),
@@ -713,8 +723,9 @@ function propertyType(property) {
     // Type is read from the x-type vendor extension
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
     return type.length == 0 ? 'null' : type;
-  } else if(property['x-nullable']) {
-    return 'null | ' + propertyType(Object.assign(property, {'x-nullable': undefined}));
+  } else if (property['x-nullable']) {
+    return 'null | ' + propertyType(
+      Object.assign(property, {'x-nullable': undefined}));
   } else if (!property.type && (property.anyOf || property.oneOf)) {
     let variants = (property.anyOf || property.oneOf).map(propertyType);
     return {
@@ -1191,7 +1202,7 @@ function processServices(swagger, models, options) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var status = Number(code);
-        var actualDeps = (status < 200 || status >= 300) 
+        var actualDeps = (status < 200 || status >= 300)
           ? errorDependencies : dependencies;
         var response = op.operationResponses[code];
         if (response.type) {

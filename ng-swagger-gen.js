@@ -785,44 +785,28 @@ function propertyType(property) {
       return 'Blob';
     case 'object':
       var def = '{';
-      var first = true;
+      let memberCount = 0;
       var allTypes = [];
       if (property.properties) {
         for (var name in property.properties) {
           var prop = property.properties[name];
-          if (first) {
-            first = false;
-          } else {
-            def += ', ';
-          }
+          if (memberCount++) def += ', ';
           type = propertyType(prop);
-          if (allTypes.indexOf(type) < 0) {
-            allTypes.push(type);
-          }
-          def += name + ': ' + type;
+          allTypes.push(type);
+	        let required = property.required && property.required.indexOf(name) >= 0;
+	        def += name + (required ? ': ' : '?: ') + type;
         }
       }
-      if (property.additionalProperties) {
-        if (!first) {
-          def += ', ';
-        }
-        type = propertyType(property.additionalProperties);
-        if (typeof type === 'object') {
-          // A nested object
-          (type.allTypes || []).forEach(t => {
-            if (!allTypes.includes(t)) {
-              allTypes.push(t);
-            }
-          });
-          type = type.toString();
-        } else if (allTypes.indexOf(type) < 0) {
-          allTypes.push(type);
-        }
+      if (!property.hasOwnProperty('additionalProperties') || property.additionalProperties) {
+        if (memberCount++) def += ', ';
+        type = property.additionalProperties ? propertyType(property.additionalProperties) : 'any';
+	      allTypes.push(type);
         def += '[key: string]: ' + type;
       }
       def += '}';
+
       return {
-        allTypes: allTypes,
+        allTypes: mergeTypes(...allTypes),
         toString: () => def,
       };
     default:

@@ -554,6 +554,13 @@ function processModels(swagger, options) {
       }
     } else if (model.type === 'array') {
       elementType = propertyType(model);
+    } else if (!model.type && (model.anyOf || model.oneOf)) {
+      let of = model.anyOf || model.oneOf;
+      let variants = of.map(propertyType);
+      simpleType = {
+        allTypes: mergeTypes(...variants),
+        toString: () => variants.join(' |\n  ')
+      };
     } else if (model.type === 'object' || model.type === undefined) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
@@ -625,7 +632,7 @@ function processModels(swagger, options) {
   var addToDependencies = (t, i) => dependencies.add(t);
   for (name in models) {
     model = models[name];
-    if (model.modelIsEnum || model.modelIsSimple) {
+    if (model.modelIsEnum || model.modelIsSimple && !model.modelSimpleType.allTypes) {
       // Enums or simple types have no dependencies
       continue;
     }
@@ -653,6 +660,10 @@ function processModels(swagger, options) {
     // If an array, the element type is a dependency
     if (model.modelElementType) {
       model.modelElementType.allTypes.forEach(addToDependencies);
+    }
+
+    if (model.modelSimpleType && model.modelSimpleType.allTypes) {
+      model.modelSimpleType.allTypes.forEach(addToDependencies);
     }
 
     model.modelDependencies = dependencies.get();

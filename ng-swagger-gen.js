@@ -528,6 +528,7 @@ function processModels(swagger, options) {
     var parent = null;
     var properties = null;
     var requiredProperties = null;
+    var additionalPropertiesType = false;
     var example = model.example || null;
     var enumValues = null;
     var elementType = null;
@@ -564,6 +565,8 @@ function processModels(swagger, options) {
     } else if (model.type === 'object' || model.type === undefined) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
+      additionalPropertiesType = model.additionalProperties !== false &&
+          model.additionalProperties ? propertyType(model.additionalProperties) : 'any';
     } else {
       simpleType = propertyType(model);
     }
@@ -582,6 +585,7 @@ function processModels(swagger, options) {
       properties: properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
       modelExample: example,
+      modelAdditionalPropertiesType: additionalPropertiesType,
       modelExampleFile: toExampleFileName(name),
       modelEnumValues: enumValues,
       modelElementType: elementType,
@@ -629,7 +633,12 @@ function processModels(swagger, options) {
   }
 
   // Now that the model hierarchy is ok, resolve the dependencies
-  var addToDependencies = (t, i) => dependencies.add(t);
+  var addToDependencies = t => {
+    if (Array.isArray(t.allTypes)) {
+      t.allTypes.forEach(it => dependencies.add(it));
+    }
+    else dependencies.add(t);
+  };
   for (name in models) {
     model = models[name];
     if (model.modelIsEnum || model.modelIsSimple && !model.modelSimpleType.allTypes) {
@@ -647,24 +656,16 @@ function processModels(swagger, options) {
     if (model.modelProperties) {
       for (i = 0; i < model.modelProperties.length; i++) {
         property = model.modelProperties[i];
-        var type = property.propertyType;
-        if (type.allTypes) {
-          // This is an inline object. Append all types
-          type.allTypes.forEach(addToDependencies);
-        } else {
-          dependencies.add(type);
-        }
+        addToDependencies(property.propertyType);
       }
     }
 
     // If an array, the element type is a dependency
-    if (model.modelElementType) {
-      model.modelElementType.allTypes.forEach(addToDependencies);
-    }
+    if (model.modelElementType) addToDependencies(model.modelElementType);
 
-    if (model.modelSimpleType && model.modelSimpleType.allTypes) {
-      model.modelSimpleType.allTypes.forEach(addToDependencies);
-    }
+    if (model.modelSimpleType) addToDependencies(model.modelSimpleType);
+
+    if (model.modelAdditionalPropertiesType) addToDependencies(model.modelAdditionalPropertiesType);
 
     model.modelDependencies = dependencies.get();
   }

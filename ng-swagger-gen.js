@@ -738,6 +738,9 @@ function propertyType(property) {
       if (property.enum && property.enum.length > 0) {
         return '\'' + property.enum.join('\' | \'') + '\'';
       }
+      else if (property.const) {
+        return '\'' + property.const + '\'';
+      }
       return 'string';
     case 'array':
       if (Array.isArray(property.items)) { // support for tuples
@@ -762,6 +765,8 @@ function propertyType(property) {
       }
     case 'integer':
     case 'number':
+      if (property.enum && property.enum.length > 0) return property.enum.join(' | ');
+      if (property.const) return property.const;
       return 'number';
     case 'boolean':
       return 'boolean';

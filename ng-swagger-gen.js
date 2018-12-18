@@ -566,7 +566,7 @@ function processModels(swagger, options) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
       additionalPropertiesType = model.additionalProperties !== false &&
-          model.additionalProperties ? propertyType(model.additionalProperties) : 'any';
+          (model.additionalProperties ? propertyType(model.additionalProperties) : 'any');
     } else {
       simpleType = propertyType(model);
     }

@@ -752,6 +752,8 @@ function propertyType(property) {
     };
   }
   switch (property.type) {
+    case 'null':
+      return 'null';
     case 'string':
       if (property.enum && property.enum.length > 0) {
         return '\'' + property.enum.join('\' | \'') + '\'';

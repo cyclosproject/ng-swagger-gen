@@ -726,7 +726,7 @@ function mergeTypes(...types) {
  */
 function propertyType(property) {
   var type;
-  if (property == null) {
+  if (property === null || property.type === null) {
     return 'null';
   } else if (property.$ref != null) {
     // Type is a reference

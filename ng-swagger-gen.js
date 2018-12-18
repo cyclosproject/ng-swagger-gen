@@ -744,6 +744,12 @@ function propertyType(property) {
       allTypes: mergeTypes(...variants),
       toString: () => variants.join(' | ')
     };
+  } else if (Array.isArray(property.type)) {
+    let variants = property.type.map(type => propertyType(Object.assign({}, property, {type})));
+    return {
+      allTypes: mergeTypes(...variants),
+      toString: () => variants.join(' | ')
+    };
   }
   switch (property.type) {
     case 'string':

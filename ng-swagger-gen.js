@@ -565,8 +565,8 @@ function processModels(swagger, options) {
     } else if (model.type === 'object' || model.type === undefined) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
-      additionalPropertiesType = model.additionalProperties !== false &&
-          (model.additionalProperties ? propertyType(model.additionalProperties) : 'any');
+      additionalPropertiesType = model.additionalProperties &&
+          (typeof model.additionalProperties === 'object' ? propertyType(model.additionalProperties) : 'any');
     } else {
       simpleType = propertyType(model);
     }
@@ -798,9 +798,10 @@ function propertyType(property) {
 	        def += name + (required ? ': ' : '?: ') + type;
         }
       }
-      if (!property.hasOwnProperty('additionalProperties') || property.additionalProperties) {
+      if (property.additionalProperties) {
         if (memberCount++) def += ', ';
-        type = property.additionalProperties ? propertyType(property.additionalProperties) : 'any';
+        type = typeof property.additionalProperties === 'object' ?
+            propertyType(property.additionalProperties) : 'any';
 	      allTypes.push(type);
         def += '[key: string]: ' + type;
       }

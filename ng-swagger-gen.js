@@ -524,6 +524,7 @@ function processModels(swagger, options) {
     var parent = null;
     var properties = null;
     var requiredProperties = null;
+    var additionalPropertiesType = false;
     var example = model.example || null;
     var enumValues = null;
     var elementType = null;
@@ -550,9 +551,18 @@ function processModels(swagger, options) {
       }
     } else if (model.type === 'array') {
       elementType = propertyType(model);
+    } else if (!model.type && (model.anyOf || model.oneOf)) {
+      let of = model.anyOf || model.oneOf;
+      let variants = of.map(propertyType);
+      simpleType = {
+        allTypes: mergeTypes(...variants),
+        toString: () => variants.join(' |\n  ')
+      };
     } else if (model.type === 'object' || model.type === undefined) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
+      additionalPropertiesType = model.additionalProperties &&
+          (typeof model.additionalProperties === 'object' ? propertyType(model.additionalProperties) : 'any');
     } else {
       simpleType = propertyType(model);
     }
@@ -571,6 +581,7 @@ function processModels(swagger, options) {
       properties: properties == null ? null :
         processProperties(swagger, properties, requiredProperties),
       modelExample: example,
+      modelAdditionalPropertiesType: additionalPropertiesType,
       modelExampleFile: toExampleFileName(name),
       modelEnumValues: enumValues,
       modelElementType: elementType,
@@ -618,10 +629,15 @@ function processModels(swagger, options) {
   }
 
   // Now that the model hierarchy is ok, resolve the dependencies
-  var addToDependencies = (t, i) => dependencies.add(t);
+  var addToDependencies = t => {
+    if (Array.isArray(t.allTypes)) {
+      t.allTypes.forEach(it => dependencies.add(it));
+    }
+    else dependencies.add(t);
+  };
   for (name in models) {
     model = models[name];
-    if (model.modelIsEnum || model.modelIsSimple) {
+    if (model.modelIsEnum || model.modelIsSimple && !model.modelSimpleType.allTypes) {
       // Enums or simple types have no dependencies
       continue;
     }
@@ -636,20 +652,16 @@ function processModels(swagger, options) {
     if (model.modelProperties) {
       for (i = 0; i < model.modelProperties.length; i++) {
         property = model.modelProperties[i];
-        var type = property.propertyType;
-        if (type.allTypes) {
-          // This is an inline object. Append all types
-          type.allTypes.forEach(addToDependencies);
-        } else {
-          dependencies.add(type);
-        }
+        addToDependencies(property.propertyType);
       }
     }
 
     // If an array, the element type is a dependency
-    if (model.modelElementType) {
-      dependencies.add(model.modelElementType);
-    }
+    if (model.modelElementType) addToDependencies(model.modelElementType);
+
+    if (model.modelSimpleType) addToDependencies(model.modelSimpleType);
+
+    if (model.modelAdditionalPropertiesType) addToDependencies(model.modelAdditionalPropertiesType);
 
     model.modelDependencies = dependencies.get();
   }
@@ -692,6 +704,21 @@ function removeBrackets(type, nullOrUndefinedOnly) {
 }
 
 /**
+ * Combine dependencies of multiple types.
+ * @param types
+ * @return {Array}
+ */
+function mergeTypes(...types) {
+  let allTypes = [];
+  types.forEach(type => {
+    (type.allTypes || [type]).forEach(type => {
+      if (allTypes.indexOf(type) < 0) allTypes.push(type);
+    });
+  });
+  return allTypes;
+}
+
+/**
  * Returns the TypeScript property type for the given raw property
  */
 function propertyType(property) {
@@ -711,7 +738,7 @@ function propertyType(property) {
   } else if (!property.type && (property.anyOf || property.oneOf)) {
     let variants = (property.anyOf || property.oneOf).map(propertyType);
     return {
-      allTypes: variants.map(variant => variant.allTypes || variant),
+      allTypes: mergeTypes(...variants),
       toString: () => variants.join(' | ')
     };
   }
@@ -720,11 +747,35 @@ function propertyType(property) {
       if (property.enum && property.enum.length > 0) {
         return '\'' + property.enum.join('\' | \'') + '\'';
       }
+      else if (property.const) {
+        return '\'' + property.const + '\'';
+      }
       return 'string';
     case 'array':
-      return 'Array<' + propertyType(property.items) + '>';
+      if (Array.isArray(property.items)) { // support for tuples
+        if (!property.maxItems) return 'Array<any>'; // there is unable to define unlimited tuple in TypeScript
+        let minItems = property.minItems || 0,
+            maxItems = property.maxItems,
+            types = property.items.map(propertyType);
+        types.push(property.additionalItems ? propertyType(property.additionalItems) : 'any');
+        let variants = [];
+        for (let i = minItems; i <= maxItems; i++) variants.push(types.slice(0, i));
+        return {
+          allTypes: mergeTypes(...types.slice(0, maxItems)),
+          toString: () => variants.map(types => `[${types.join(', ')}]`).join(' | ')
+        };
+      }
+      else {
+        let itemType = propertyType(property.items);
+        return {
+          allTypes: mergeTypes(itemType),
+          toString: () => 'Array<' + itemType + '>'
+        };
+      }
     case 'integer':
     case 'number':
+      if (property.enum && property.enum.length > 0) return property.enum.join(' | ');
+      if (property.const) return property.const;
       return 'number';
     case 'boolean':
       return 'boolean';
@@ -732,44 +783,29 @@ function propertyType(property) {
       return 'Blob';
     case 'object':
       var def = '{';
-      var first = true;
+      let memberCount = 0;
       var allTypes = [];
       if (property.properties) {
         for (var name in property.properties) {
           var prop = property.properties[name];
-          if (first) {
-            first = false;
-          } else {
-            def += ', ';
-          }
+          if (memberCount++) def += ', ';
           type = propertyType(prop);
-          if (allTypes.indexOf(type) < 0) {
-            allTypes.push(type);
-          }
-          def += name + ': ' + type;
+          allTypes.push(type);
+	        let required = property.required && property.required.indexOf(name) >= 0;
+	        def += name + (required ? ': ' : '?: ') + type;
         }
       }
       if (property.additionalProperties) {
-        if (!first) {
-          def += ', ';
-        }
-        type = propertyType(property.additionalProperties);
-        if (typeof type === 'object') {
-          // A nested object
-          (type.allTypes || []).forEach(t => {
-            if (!allTypes.includes(t)) {
-              allTypes.push(t);
-            }
-          });
-          type = type.toString();
-        } else if (allTypes.indexOf(type) < 0) {
-          allTypes.push(type);
-        }
+        if (memberCount++) def += ', ';
+        type = typeof property.additionalProperties === 'object' ?
+            propertyType(property.additionalProperties) : 'any';
+	      allTypes.push(type);
         def += '[key: string]: ' + type;
       }
       def += '}';
+
       return {
-        allTypes: allTypes,
+        allTypes: mergeTypes(...allTypes),
         toString: () => def,
       };
     default:

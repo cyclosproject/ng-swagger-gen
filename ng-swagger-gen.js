@@ -666,17 +666,18 @@ function removeBrackets(type, nullOrUndefinedOnly) {
   if(typeof nullOrUndefinedOnly === "undefined") {
     nullOrUndefinedOnly = false;
   }
-  if (typeof type == 'object') {
+  if (typeof type === 'object') {
     return 'object';
   }
   else if(type.replace(/ /g, '') !== type) {
     return removeBrackets(type.replace(/ /g, ''));
   }
-  else if(type.indexOf('null|')===0) {
-    return removeBrackets(type.substr('null|'.length))
+  else if(type.indexOf('null|') === 0) {
+    return removeBrackets(type.substr('null|'.length));
   }
-  else if(type.indexOf('undefined|')===0) { // Not used currently, but robust code is better code :)
-    return removeBrackets(type.substr('undefined|'.length))
+  else if(type.indexOf('undefined|') === 0) {
+    // Not used currently, but robust code is better code :)
+    return removeBrackets(type.substr('undefined|'.length));
   }
   if (type == null || type.length === 0 || nullOrUndefinedOnly) {
     return type;
@@ -1098,7 +1099,7 @@ function processServices(swagger, models, options) {
         operationPathExpression:
           toPathExpression(operationParameters, paramsClass, url),
         operationResultType: resultType,
-        operationHttpResponseType: 'StrictHttpResponse<' + resultType + '>',
+        operationHttpResponseType: '__StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
         operationParameters: operationParameters,
         operationResponses: operationResponses,

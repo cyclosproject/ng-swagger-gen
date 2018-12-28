@@ -235,21 +235,16 @@ function doGenerate(swagger, options) {
 
   // Write the configuration
   {
-    // Following code ported from io.swagger.codegen.DefaultGenerator#getHost with some changes for issue #113
-    var rootUrlBuilder = [];
+    var rootUrl = '';
     if (swagger.hasOwnProperty('host') && swagger.host !== '') {
       var schemes = swagger.schemes || [];
-      var scheme = schemes.length === 0 ? 'https' : schemes[0];
-      rootUrlBuilder.push(scheme);
-      rootUrlBuilder.push('://');
-      rootUrlBuilder.push(swagger.host);
-    } else {
-      console.warn('\'host\' not defined in the spec. Default to relative basePath only.');
+      var scheme = schemes.length === 0 ? '//' : schemes[0] + '://';
+      rootUrl = scheme + swagger.host;
     }
-    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== '' && swagger.basePath !== '/') {
-      rootUrlBuilder.push(swagger.basePath);
+    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== ''
+      && swagger.basePath !== '/') {
+      rootUrl += swagger.basePath;
     }
-    var rootUrl = rootUrlBuilder.join('');
 
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
@@ -260,7 +255,7 @@ function doGenerate(swagger, options) {
 
   // Write the BaseService
   {
-    generate(templates.baseService, applyGlobals({}), 
+    generate(templates.baseService, applyGlobals({}),
       path.join(output, 'base-service.ts'));
   }
 }

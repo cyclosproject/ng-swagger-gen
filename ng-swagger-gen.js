@@ -458,6 +458,7 @@ function toEnumName(value) {
     result = '_' + result;
   }
   result = result.replace(/[^\w]/g, '_');
+  result = result.replace(/_+/g, '_');
   return result;
 }
 

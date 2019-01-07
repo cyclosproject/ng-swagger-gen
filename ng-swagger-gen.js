@@ -235,21 +235,16 @@ function doGenerate(swagger, options) {
 
   // Write the configuration
   {
-    // Following code ported from io.swagger.codegen.DefaultGenerator#getHost with some changes for issue #113
-    var rootUrlBuilder = [];
+    var rootUrl = '';
     if (swagger.hasOwnProperty('host') && swagger.host !== '') {
       var schemes = swagger.schemes || [];
-      var scheme = schemes.length === 0 ? 'https' : schemes[0];
-      rootUrlBuilder.push(scheme);
-      rootUrlBuilder.push('://');
-      rootUrlBuilder.push(swagger.host);
-    } else {
-      console.warn('\'host\' not defined in the spec. Default to relative basePath only.');
+      var scheme = schemes.length === 0 ? '//' : schemes[0] + '://';
+      rootUrl = scheme + swagger.host;
     }
-    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== '' && swagger.basePath !== '/') {
-      rootUrlBuilder.push(swagger.basePath);
+    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== ''
+      && swagger.basePath !== '/') {
+      rootUrl += swagger.basePath;
     }
-    var rootUrl = rootUrlBuilder.join('');
 
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,
@@ -260,7 +255,7 @@ function doGenerate(swagger, options) {
 
   // Write the BaseService
   {
-    generate(templates.baseService, applyGlobals({}), 
+    generate(templates.baseService, applyGlobals({}),
       path.join(output, 'base-service.ts'));
   }
 }
@@ -463,6 +458,7 @@ function toEnumName(value) {
     result = '_' + result;
   }
   result = result.replace(/[^\w]/g, '_');
+  result = result.replace(/_+/g, '_');
   return result;
 }
 
@@ -682,17 +678,18 @@ function removeBrackets(type, nullOrUndefinedOnly) {
   if(typeof nullOrUndefinedOnly === "undefined") {
     nullOrUndefinedOnly = false;
   }
-  if (typeof type == 'object') {
+  if (typeof type === 'object') {
     return 'object';
   }
   else if(type.replace(/ /g, '') !== type) {
     return removeBrackets(type.replace(/ /g, ''));
   }
-  else if(type.indexOf('null|')===0) {
-    return removeBrackets(type.substr('null|'.length))
+  else if(type.indexOf('null|') === 0) {
+    return removeBrackets(type.substr('null|'.length));
   }
-  else if(type.indexOf('undefined|')===0) { // Not used currently, but robust code is better code :)
-    return removeBrackets(type.substr('undefined|'.length))
+  else if(type.indexOf('undefined|') === 0) {
+    // Not used currently, but robust code is better code :)
+    return removeBrackets(type.substr('undefined|'.length));
   }
   if (type == null || type.length === 0 || nullOrUndefinedOnly) {
     return type;
@@ -865,12 +862,15 @@ function resolveRef(swagger, ref) {
  * by each HTTP code, whose values are objects with code and type properties,
  * plus a property resultType, which is the type to the HTTP 2xx code.
  */
-function processResponses(def, path, models) {
+function processResponses(swagger, def, path, models) {
   var responses = def.responses || {};
   var operationResponses = {};
   operationResponses.returnHeaders = false;
   for (var code in responses) {
     var response = responses[code];
+    if (response.$ref) {
+      response = resolveRef(swagger, response.$ref);
+    }
     if (!response.schema) {
       continue;
     }
@@ -1097,7 +1097,7 @@ function processServices(swagger, models, options) {
       if (operationParameters.length > 0) {
         operationParameters[operationParameters.length - 1].paramIsLast = true;
       }
-      var operationResponses = processResponses(def, path, models);
+      var operationResponses = processResponses(swagger, def, path, models);
       var resultType = operationResponses.resultType;
       var isMultipart = false;
       for (i = 0; i < operationParameters.length; i++) {
@@ -1146,7 +1146,7 @@ function processServices(swagger, models, options) {
         operationPathExpression:
           toPathExpression(operationParameters, paramsClass, url),
         operationResultType: resultType,
-        operationHttpResponseType: 'StrictHttpResponse<' + resultType + '>',
+        operationHttpResponseType: '__StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
         operationParameters: operationParameters,
         operationResponses: operationResponses,

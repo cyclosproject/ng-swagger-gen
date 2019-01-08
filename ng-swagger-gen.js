@@ -723,7 +723,7 @@ function mergeTypes(...types) {
  */
 function propertyType(property) {
   var type;
-  if (property == null) {
+  if (property === null || property.type === null) {
     return 'null';
   } else if (property.$ref != null) {
     // Type is a reference
@@ -741,8 +741,16 @@ function propertyType(property) {
       allTypes: mergeTypes(...variants),
       toString: () => variants.join(' | ')
     };
+  } else if (Array.isArray(property.type)) {
+    let variants = property.type.map(type => propertyType(Object.assign({}, property, {type})));
+    return {
+      allTypes: mergeTypes(...variants),
+      toString: () => variants.join(' | ')
+    };
   }
   switch (property.type) {
+    case 'null':
+      return 'null';
     case 'string':
       if (property.enum && property.enum.length > 0) {
         return '\'' + property.enum.join('\' | \'') + '\'';

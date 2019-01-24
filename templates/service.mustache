@@ -13,6 +13,8 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
   providedIn: 'root',
 })
 class {{serviceClass}} extends __BaseService {
+{{#serviceOperations}}{{>operationEndpoints}}{{/serviceOperations}}
+
   constructor(
     config: __Configuration,
     http: HttpClient

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "argparse": "^1.0.10",
+    "global-tunnel-ng": "^2.7.1",
     "json-schema-ref-parser": "^5.1.3",
     "mustache": "^2.3.2"
   },

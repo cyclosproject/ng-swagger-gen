@@ -17,6 +17,9 @@ function ngSwaggerGen(options) {
     process.exit(1);
   }
 
+  var globalTunnel = require('global-tunnel-ng');
+  globalTunnel.initialize();
+  
   $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
     data => {
       doGenerate(data, options);

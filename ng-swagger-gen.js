@@ -495,13 +495,21 @@ function DependenciesResolver(models, ownType) {
 /**
  * Adds a candidate dependency
  */
-DependenciesResolver.prototype.add = function(dep) {
-  dep = removeBrackets(dep);
-  if (this.dependencyNames.indexOf(dep) < 0 && dep !== this.ownType) {
-    var depModel = this.models[dep];
-    if (depModel) {
-      this.dependencies.push(depModel);
-      this.dependencyNames.push(depModel.modelClass);
+DependenciesResolver.prototype.add = function(input) {
+  let deps;
+  if (input.allTypes) {
+    deps = input.allTypes;
+  } else {
+    deps = [removeBrackets(input)];
+  }
+  for (let i = 0; i < deps.length; i++) {
+    let dep = deps[i];
+    if (this.dependencyNames.indexOf(dep) < 0 && dep !== this.ownType) {
+      var depModel = this.models[dep];
+      if (depModel) {
+        this.dependencies.push(depModel);
+        this.dependencyNames.push(depModel.modelClass);
+      }
     }
   }
 };

@@ -248,6 +248,9 @@ function doGenerate(swagger, options) {
       && swagger.basePath !== '/') {
       rootUrl += swagger.basePath;
     }
+    if(options.rootUrl !== undefined){
+      rootUrl = options.rootUrl;
+    }
 
     generate(templates.configuration, applyGlobals({
         rootUrl: rootUrl,

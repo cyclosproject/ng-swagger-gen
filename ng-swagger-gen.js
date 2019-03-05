@@ -103,6 +103,7 @@ function doGenerate(swagger, options) {
   // Angular's best practices demands xxx.module.ts, not xxx-module.ts
   moduleFile = moduleFile.replace(/\-module$/, '.module');
   var configurationClass = toClassName(prefix + 'Configuration');
+  var configurationInterface = toClassName(prefix + 'ConfigurationInterface');
   var configurationFile = toFileName(configurationClass);
 
   function applyGlobals(to) {
@@ -110,6 +111,7 @@ function doGenerate(swagger, options) {
     to.moduleClass = moduleClass;
     to.moduleFile = moduleFile;
     to.configurationClass = configurationClass;
+    to.configurationInterface = configurationInterface;
     to.configurationFile = configurationFile;
     return to;
   }

@@ -1018,7 +1018,7 @@ function processServices(swagger, models, options) {
 	  var methodParameters = path.parameters;
     for (var method in path || {}) {
       var def = path[method];
-      if (!def) {
+      if (!def || method == 'parameters') {
         continue;
       }
       var tags = def.tags || [];

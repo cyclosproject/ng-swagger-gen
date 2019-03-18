@@ -309,6 +309,9 @@ use `forRoot` method of `ApiModule` and set the `rootUrl` property from there.
 export class AppModule { }
 ```
 
+Alternatively, you can inject the `ApiConfiguration` instance in some service
+or component, such as the `AppComponent` and set the `rootUrl` property there.
+
 ## Passing request headers / customizing the request
 To pass request headers, such as authorization or API keys, as well as having a
 centralized error handling, a standard

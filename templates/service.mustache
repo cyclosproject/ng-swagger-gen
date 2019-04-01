@@ -1,10 +1,10 @@
 /* tslint:disable */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { BaseService } from '../base-service';
-import { {{ configurationClass }} } from '../{{configurationFile}}';
-import { StrictHttpResponse } from '../strict-http-response';
-import { Observable } from 'rxjs';
+import { BaseService as __BaseService } from '../base-service';
+import { {{ configurationClass }} as __Configuration } from '../{{configurationFile}}';
+import { StrictHttpResponse as __StrictHttpResponse } from '../strict-http-response';
+import { Observable as __Observable } from 'rxjs';
 import { map as __map, filter as __filter } from 'rxjs/operators';
 
 {{#serviceDependencies}}import { {{modelClass}} } from '../models/{{modelFile}}';
@@ -12,9 +12,11 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
 {{{serviceComments}}}@Injectable({
   providedIn: 'root',
 })
-class {{serviceClass}} extends BaseService {
+class {{serviceClass}} extends __BaseService {
+{{#serviceOperations}}{{>operationEndpoints}}{{/serviceOperations}}
+
   constructor(
-    config: {{ configurationClass }},
+    config: __Configuration,
     http: HttpClient
   ) {
     super(config, http);

@@ -16,7 +16,7 @@ Angular / RxJS version compatibility:
 
 If you are interested in generating a client for services described using
 OpenAPI 3, take a look on
-(ng-openapi-gen)[https://github.com/cyclosproject/ng-openapi-gen].
+[ng-openapi-gen](https://github.com/cyclosproject/ng-openapi-gen).
 
 ## Major version upgrade notices
 

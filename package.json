@@ -1,6 +1,6 @@
 {
   "name": "ng-swagger-gen",
-  "version": "1.7.0-a",
+  "version": "1.7.0-b",
   "license": "MIT",
   "author": "Cyclos development team",
   "description": "A Swagger 2.0 codegen for Angular",

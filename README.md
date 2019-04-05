@@ -12,6 +12,12 @@ Angular / RxJS version compatibility:
 - Starting with version `1.0.0`, Angular 6+ is required.
 - Version `0.11.x` supports Angular 4.3+ (with rxjs 5.5) and Angular 5.
 
+## OpenAPI 3
+
+If you are interested in generating a client for services described using
+OpenAPI 3, take a look on
+(ng-openapi-gen)[https://github.com/cyclosproject/ng-openapi-gen].
+
 ## Major version upgrade notices
 
 - [Angular 6](https://blog.angular.io/version-6-of-angular-now-available-cc56b0efa7a4)

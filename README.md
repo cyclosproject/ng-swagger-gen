@@ -238,6 +238,7 @@ The supported properties in the JSON file are:
   section, will generate a corresponding `<model>.example.ts` file, exporting a
   function called `get<Model>Example()`, which will return the data present in
   the example section.
+- `camelCase`: Generates service methods in camelCase instead of PascalCase.
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few

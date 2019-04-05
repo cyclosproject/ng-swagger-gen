@@ -1150,8 +1150,12 @@ function processServices(swagger, models, options) {
       if (operationResponses.resultDescription) {
         docString += '\n@return ' + operationResponses.resultDescription;
       }
+      function getOperationName(string) {
+        if (options.camelCase) return string.charAt(0).toLowerCase() + string.slice(1);
+        else return string;
+      }
       var operation = {
-        operationName: id,
+        operationName: getOperationName(id),
         operationParamsClass: paramsClass,
         operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),

@@ -94,6 +94,11 @@
       "description": "Indicates whether or not to generate the example files from the example sections of the models. Defaults to false.",
       "type": "boolean",
       "default": "false"
+    },
+    "camelCase": {
+      "description": "Generates service methods in camelCase instead of PascalCase",
+      "type": "boolean",
+      "default": "false"
     }
   }
 }

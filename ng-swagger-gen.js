@@ -1058,6 +1058,19 @@ function processServices(swagger, models, options) {
         paramsClassComments = toComments('Parameters for ' + id, 1);
       }
 
+      var paramsName = []
+      for (var p = 0; p < parameters.length; p++) {
+        param = parameters[p];
+        param.name = param.name.replace("[]", "");
+        if(paramsName.includes(param.name)) {
+          delete parameters[paramsName.indexOf(param.name)];
+          parameters[p].type = 'any'
+        }else{
+          paramsName[p] = param.name;
+        }
+      }
+      parameters = parameters.filter(function(e){return e}); 
+
       var operationParameters = [];
       for (var p = 0; p < parameters.length; p++) {
         param = parameters[p];

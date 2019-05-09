@@ -926,6 +926,26 @@ function toPathExpression(operationParameters, paramsClass, path) {
 }
 
 /**
+ * Adds path params to the collection params interface
+ * if there is a parameters class
+ */
+function addPathParameters(path, parameters) {
+  var re = /\{([^}]+)}/g;
+  var match,paramName;
+  do {
+    match = re.exec(path);
+      if (match) {
+        paramName = match[1];
+        parameters.push({ description: 'Filter by '+paramName,
+          name: paramName,
+          in: 'query',
+          required: false,
+          type: 'string' });
+      }
+  } while (match);
+}
+
+/**
  * Transforms the given string into a valid identifier
  */
 function toIdentifier(string) {
@@ -1046,6 +1066,10 @@ function processServices(swagger, models, options) {
       );
 
       var parameters = def.parameters || [];
+
+      if(paramsClass){
+        addPathParameters(url, parameters)
+      }
 
       if (methodParameters) {
         parameters = parameters.concat(methodParameters);

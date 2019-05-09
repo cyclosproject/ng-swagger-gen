@@ -927,7 +927,6 @@ function toPathExpression(operationParameters, paramsClass, path) {
 
 /**
  * Adds path params to the collection params interface
- * if there is a parameters class
  */
 function addPathParameters(path, parameters) {
   var re = /\{([^}]+)}/g;

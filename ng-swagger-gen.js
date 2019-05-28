@@ -1233,7 +1233,7 @@ function processServices(swagger, models, options) {
           var actualDeps = (status < 200 || status >= 300)
             ? errorDependencies : dependencies;
           var response = op.operationResponses[code];
-          if (response.type) {
+          if (response && response.type) {
             var type = response.type;
             if (type && type.allTypes) {
               // This is an inline object. Append all types

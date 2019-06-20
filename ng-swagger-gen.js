@@ -19,19 +19,22 @@ function ngSwaggerGen(options) {
 
   var globalTunnel = require('global-tunnel-ng');
   globalTunnel.initialize();
-  
-  $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
-    data => {
-      doGenerate(data, options);
-    },
-    err => {
-      console.error(
-        `Error reading swagger location ${options.swagger}: ${err}`
-      );
-    }
-  ).catch(function (error) {
-    console.error(`Error: ${error}`);
-  });
+
+  $RefParser
+    .bundle(options.swagger, { dereference: { circular: false } })
+    .then(
+      data => {
+        doGenerate(data, options);
+      },
+      err => {
+        console.error(
+          `Error reading swagger location ${options.swagger}: ${err}`,
+        );
+      },
+    )
+    .catch(function(error) {
+      console.error(`Error: ${error}`);
+    });
 }
 
 /**
@@ -44,11 +47,12 @@ function doGenerate(swagger, options) {
 
   var output = path.normalize(options.output || 'src/app/api');
   var prefix = options.prefix || 'Api';
+  var getTemplateOverrides = createOptionsGetter(options.templateOptions || {});
 
   if (swagger.swagger !== '2.0') {
     console.error(
       'Invalid swagger specification. Must be a 2.0. Currently ' +
-        swagger.swagger
+        swagger.swagger,
     );
     process.exit(1);
   }
@@ -71,12 +75,15 @@ function doGenerate(swagger, options) {
 
   // Read the templates
   var templates = {};
+  var templateOverrides = {};
   var files = fs.readdirSync(options.templates);
   files.forEach(function(file, index) {
     var pos = file.indexOf('.mustache');
     if (pos >= 0) {
+      var name = file.substr(0, pos);
       var fullFile = path.join(options.templates, file);
-      templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
+      templates[name] = fs.readFileSync(fullFile, 'utf-8');
+      templateOverrides[name] = getTemplateOverrides(name);
     }
   });
 
@@ -90,9 +97,15 @@ function doGenerate(swagger, options) {
   var generateEnumModule = options.enumModule !== false;
 
   // Utility function to render a template and write it to a file
-  var generate = function(template, model, file) {
-    var code = Mustache.render(template, model, templates)
-      .replace(/[^\S\r\n]+$/gm, '');
+  var generate = function(templateName, model, file) {
+    var template = templates[templateName];
+    var modelOverrides = templateOverrides[templateName];
+    var fullModel = { ...model, ...modelOverrides };
+
+    var code = Mustache.render(template, fullModel, templates).replace(
+      /[^\S\r\n]+$/gm,
+      '',
+    );
     fs.writeFileSync(file, code, 'UTF-8');
     console.info('Wrote ' + file);
   };
@@ -131,21 +144,17 @@ function doGenerate(swagger, options) {
       continue;
     }
     modelsArray.push(model);
-    generate(
-      templates.model,
-      model,
-      path.join(modelsOutput, model.modelFile + '.ts')
-    );
+    generate('model', model, path.join(modelsOutput, model.modelFile + '.ts'));
     if (options.generateExamples && model.modelExample) {
       var example = JSON.stringify(model.modelExample, null, 2);
       example = example.replace(/'/g, "\\'");
       example = example.replace(/"/g, "'");
-      example = example.replace(/\n/g, "\n  ");
+      example = example.replace(/\n/g, '\n  ');
       model.modelExampleStr = example;
       generate(
-        templates.example,
+        'example',
         model,
-        path.join(modelsOutput, model.modelExampleFile + '.ts')
+        path.join(modelsOutput, model.modelExampleFile + '.ts'),
       );
     }
   }
@@ -159,9 +168,11 @@ function doGenerate(swagger, options) {
       var basename = path.basename(file);
       for (var modelName in models) {
         var model = models[modelName];
-        if (basename == model.modelFile + '.ts'
-          || basename == model.modelExampleFile + '.ts'
-            && model.modelExampleStr != null) {
+        if (
+          basename == model.modelFile + '.ts' ||
+          (basename == model.modelExampleFile + '.ts' &&
+            model.modelExampleStr != null)
+        ) {
           ok = true;
           break;
         }
@@ -175,14 +186,17 @@ function doGenerate(swagger, options) {
   // Write the model index
   var modelIndexFile = path.join(output, 'models.ts');
   if (options.modelIndex !== false) {
-    generate(templates.models, { models: modelsArray }, modelIndexFile);
+    generate('models', { models: modelsArray }, modelIndexFile);
   } else if (removeStaleFiles) {
     rmIfExists(modelIndexFile);
   }
 
   // Write the StrictHttpResponse type
-  generate(templates.strictHttpResponse, {},
-    path.join(output, 'strict-http-response.ts'));
+  generate(
+    'strictHttpResponse',
+    {},
+    path.join(output, 'strict-http-response.ts'),
+  );
 
   // Write the services
   var servicesArray = [];
@@ -193,9 +207,9 @@ function doGenerate(swagger, options) {
     servicesArray.push(service);
 
     generate(
-      templates.service,
+      'service',
       service,
-      path.join(servicesOutput, service.serviceFile + '.ts')
+      path.join(servicesOutput, service.serviceFile + '.ts'),
     );
   }
   if (servicesArray.length > 0) {
@@ -222,7 +236,7 @@ function doGenerate(swagger, options) {
   // Write the service index
   var serviceIndexFile = path.join(output, 'services.ts');
   if (options.serviceIndex !== false) {
-    generate(templates.services, { services: servicesArray }, serviceIndexFile);
+    generate('services', { services: servicesArray }, serviceIndexFile);
   } else if (removeStaleFiles) {
     rmIfExists(serviceIndexFile);
   }
@@ -230,10 +244,13 @@ function doGenerate(swagger, options) {
   // Write the module
   var fullModuleFile = path.join(output, moduleFile + '.ts');
   if (options.apiModule !== false) {
-    generate(templates.module, applyGlobals({
-        services: servicesArray
+    generate(
+      'module',
+      applyGlobals({
+        services: servicesArray,
       }),
-      fullModuleFile);
+      fullModuleFile,
+    );
   } else if (removeStaleFiles) {
     rmIfExists(fullModuleFile);
   }
@@ -246,23 +263,39 @@ function doGenerate(swagger, options) {
       var scheme = schemes.length === 0 ? '//' : schemes[0] + '://';
       rootUrl = scheme + swagger.host;
     }
-    if (swagger.hasOwnProperty('basePath') && swagger.basePath !== ''
-      && swagger.basePath !== '/') {
+    if (
+      swagger.hasOwnProperty('basePath') &&
+      swagger.basePath !== '' &&
+      swagger.basePath !== '/'
+    ) {
       rootUrl += swagger.basePath;
     }
 
-    generate(templates.configuration, applyGlobals({
+    generate(
+      'configuration',
+      applyGlobals({
         rootUrl: rootUrl,
       }),
-      path.join(output, configurationFile + '.ts')
+      path.join(output, configurationFile + '.ts'),
     );
   }
 
   // Write the BaseService
   {
-    generate(templates.baseService, applyGlobals({}),
-      path.join(output, 'base-service.ts'));
+    generate(
+      'baseService',
+      applyGlobals({}),
+      path.join(output, 'base-service.ts'),
+    );
   }
+}
+
+function getTemplateOptions(template, options) {
+  return options[template] || {};
+}
+
+function createOptionsGetter(options) {
+  return template => getTemplateOptions(template, options);
 }
 
 /**
@@ -292,7 +325,7 @@ function applyTagFilter(models, services, options) {
   // Filter out the unused models
   var ignoreUnusedModels = options.ignoreUnusedModels !== false;
   var usedModels = new Set();
-  const addToUsed = (dep) => usedModels.add(dep);
+  const addToUsed = dep => usedModels.add(dep);
   for (var serviceName in services) {
     var include =
       (!included || included.indexOf(serviceName) >= 0) &&
@@ -300,7 +333,7 @@ function applyTagFilter(models, services, options) {
     if (!include) {
       // This service is skipped - remove it
       console.info(
-        'Ignoring service ' + serviceName + ' because it was not included'
+        'Ignoring service ' + serviceName + ' because it was not included',
       );
       delete services[serviceName];
     } else if (ignoreUnusedModels) {
@@ -315,7 +348,7 @@ function applyTagFilter(models, services, options) {
     // Collect the model dependencies of models, so unused can be removed
     var allDependencies = new Set();
     usedModels.forEach(dep =>
-      collectDependencies(allDependencies, dep, models)
+      collectDependencies(allDependencies, dep, models),
     );
 
     // Remove all models that are unused
@@ -326,7 +359,7 @@ function applyTagFilter(models, services, options) {
         console.info(
           'Ignoring model ' +
             modelName +
-            ' because it was not used by any service'
+            ' because it was not used by any service',
         );
         delete models[modelName];
       }
@@ -343,8 +376,8 @@ function collectDependencies(dependencies, model, models) {
   }
   dependencies.add(model.modelClass);
   if (model.modelDependencies) {
-    model.modelDependencies.forEach((dep) =>
-      collectDependencies(dependencies, dep, models)
+    model.modelDependencies.forEach(dep =>
+      collectDependencies(dependencies, dep, models),
     );
   }
 }
@@ -569,13 +602,16 @@ function processModels(swagger, options) {
       let variants = of.map(propertyType);
       simpleType = {
         allTypes: mergeTypes(...variants),
-        toString: () => variants.join(' |\n  ')
+        toString: () => variants.join(' |\n  '),
       };
     } else if (model.type === 'object' || model.type === undefined) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
-      additionalPropertiesType = model.additionalProperties &&
-          (typeof model.additionalProperties === 'object' ? propertyType(model.additionalProperties) : 'any');
+      additionalPropertiesType =
+        model.additionalProperties &&
+        (typeof model.additionalProperties === 'object'
+          ? propertyType(model.additionalProperties)
+          : 'any');
     } else {
       simpleType = propertyType(model);
     }
@@ -591,8 +627,10 @@ function processModels(swagger, options) {
       modelIsArray: elementType != null,
       modelIsSimple: simpleType != null,
       modelSimpleType: simpleType,
-      properties: properties == null ? null :
-        processProperties(swagger, properties, requiredProperties),
+      properties:
+        properties == null
+          ? null
+          : processProperties(swagger, properties, requiredProperties),
       modelExample: example,
       modelAdditionalPropertiesType: additionalPropertiesType,
       modelExampleFile: toExampleFileName(name),
@@ -608,8 +646,11 @@ function processModels(swagger, options) {
         descriptor.modelProperties.push(property);
       }
       descriptor.modelProperties.sort((a, b) => {
-        return a.modelName < b.modelName ? -1 :
-          a.modelName > b.modelName ? 1 : 0;
+        return a.modelName < b.modelName
+          ? -1
+          : a.modelName > b.modelName
+          ? 1
+          : 0;
       });
       if (descriptor.modelProperties.length > 0) {
         descriptor.modelProperties[
@@ -645,12 +686,14 @@ function processModels(swagger, options) {
   var addToDependencies = t => {
     if (Array.isArray(t.allTypes)) {
       t.allTypes.forEach(it => dependencies.add(it));
-    }
-    else dependencies.add(t);
+    } else dependencies.add(t);
   };
   for (name in models) {
     model = models[name];
-    if (model.modelIsEnum || model.modelIsSimple && !model.modelSimpleType.allTypes) {
+    if (
+      model.modelIsEnum ||
+      (model.modelIsSimple && !model.modelSimpleType.allTypes)
+    ) {
       // Enums or simple types have no dependencies
       continue;
     }
@@ -674,7 +717,8 @@ function processModels(swagger, options) {
 
     if (model.modelSimpleType) addToDependencies(model.modelSimpleType);
 
-    if (model.modelAdditionalPropertiesType) addToDependencies(model.modelAdditionalPropertiesType);
+    if (model.modelAdditionalPropertiesType)
+      addToDependencies(model.modelAdditionalPropertiesType);
 
     model.modelDependencies = dependencies.get();
   }
@@ -688,19 +732,16 @@ function processModels(swagger, options) {
  * A special case is for inline objects. In this case, the result is "object".
  */
 function removeBrackets(type, nullOrUndefinedOnly) {
-  if(typeof nullOrUndefinedOnly === "undefined") {
+  if (typeof nullOrUndefinedOnly === 'undefined') {
     nullOrUndefinedOnly = false;
   }
   if (typeof type === 'object') {
     return 'object';
-  }
-  else if(type.replace(/ /g, '') !== type) {
+  } else if (type.replace(/ /g, '') !== type) {
     return removeBrackets(type.replace(/ /g, ''));
-  }
-  else if(type.indexOf('null|') === 0) {
+  } else if (type.indexOf('null|') === 0) {
     return removeBrackets(type.substr('null|'.length));
-  }
-  else if(type.indexOf('undefined|') === 0) {
+  } else if (type.indexOf('undefined|') === 0) {
     // Not used currently, but robust code is better code :)
     return removeBrackets(type.substr('undefined|'.length));
   }
@@ -746,19 +787,23 @@ function propertyType(property) {
     type = (property['x-type'] || '').toString().replace('List<', 'Array<');
     return type.length == 0 ? 'null' : type;
   } else if (property['x-nullable']) {
-    return 'null | ' + propertyType(
-      Object.assign(property, {'x-nullable': undefined}));
+    return (
+      'null | ' +
+      propertyType(Object.assign(property, { 'x-nullable': undefined }))
+    );
   } else if (!property.type && (property.anyOf || property.oneOf)) {
     let variants = (property.anyOf || property.oneOf).map(propertyType);
     return {
       allTypes: mergeTypes(...variants),
-      toString: () => variants.join(' | ')
+      toString: () => variants.join(' | '),
     };
   } else if (Array.isArray(property.type)) {
-    let variants = property.type.map(type => propertyType(Object.assign({}, property, {type})));
+    let variants = property.type.map(type =>
+      propertyType(Object.assign({}, property, { type })),
+    );
     return {
       allTypes: mergeTypes(...variants),
-      toString: () => variants.join(' | ')
+      toString: () => variants.join(' | '),
     };
   }
   switch (property.type) {
@@ -766,36 +811,42 @@ function propertyType(property) {
       return 'null';
     case 'string':
       if (property.enum && property.enum.length > 0) {
-        return '\'' + property.enum.join('\' | \'') + '\'';
-      }
-      else if (property.const) {
-        return '\'' + property.const + '\'';
+        return "'" + property.enum.join("' | '") + "'";
+      } else if (property.const) {
+        return "'" + property.const + "'";
       }
       return 'string';
     case 'array':
-      if (Array.isArray(property.items)) { // support for tuples
+      if (Array.isArray(property.items)) {
+        // support for tuples
         if (!property.maxItems) return 'Array<any>'; // there is unable to define unlimited tuple in TypeScript
         let minItems = property.minItems || 0,
-            maxItems = property.maxItems,
-            types = property.items.map(propertyType);
-        types.push(property.additionalItems ? propertyType(property.additionalItems) : 'any');
+          maxItems = property.maxItems,
+          types = property.items.map(propertyType);
+        types.push(
+          property.additionalItems
+            ? propertyType(property.additionalItems)
+            : 'any',
+        );
         let variants = [];
-        for (let i = minItems; i <= maxItems; i++) variants.push(types.slice(0, i));
+        for (let i = minItems; i <= maxItems; i++)
+          variants.push(types.slice(0, i));
         return {
           allTypes: mergeTypes(...types.slice(0, maxItems)),
-          toString: () => variants.map(types => `[${types.join(', ')}]`).join(' | ')
+          toString: () =>
+            variants.map(types => `[${types.join(', ')}]`).join(' | '),
         };
-      }
-      else {
+      } else {
         let itemType = propertyType(property.items);
         return {
           allTypes: mergeTypes(itemType),
-          toString: () => 'Array<' + itemType + '>'
+          toString: () => 'Array<' + itemType + '>',
         };
       }
     case 'integer':
     case 'number':
-      if (property.enum && property.enum.length > 0) return property.enum.join(' | ');
+      if (property.enum && property.enum.length > 0)
+        return property.enum.join(' | ');
       if (property.const) return property.const;
       return 'number';
     case 'boolean':
@@ -812,15 +863,18 @@ function propertyType(property) {
           if (memberCount++) def += ', ';
           type = propertyType(prop);
           allTypes.push(type);
-	        let required = property.required && property.required.indexOf(name) >= 0;
-	        def += name + (required ? ': ' : '?: ') + type;
+          let required =
+            property.required && property.required.indexOf(name) >= 0;
+          def += name + (required ? ': ' : '?: ') + type;
         }
       }
       if (property.additionalProperties) {
         if (memberCount++) def += ', ';
-        type = typeof property.additionalProperties === 'object' ?
-            propertyType(property.additionalProperties) : 'any';
-	      allTypes.push(type);
+        type =
+          typeof property.additionalProperties === 'object'
+            ? propertyType(property.additionalProperties)
+            : 'any';
+        allTypes.push(type);
         def += '[key: string]: ' + type;
       }
       def += '}';
@@ -919,9 +973,7 @@ function toPathExpression(operationParameters, paramsClass, path) {
   return (path || '').replace(/\{([^}]+)}/g, (_, pName) => {
     const param = operationParameters.find(p => p.paramName === pName);
     const paramName = param ? param.paramVar : pName;
-    return paramsClass ?
-      "${params." + paramName + "}" :
-      "${" + paramName + "}";
+    return paramsClass ? '${params.' + paramName + '}' : '${' + paramName + '}';
   });
 }
 
@@ -986,7 +1038,7 @@ function operationId(given, method, url, allKnown) {
         url +
         "' defines no operationId. Assuming '" +
         id +
-        "'."
+        "'.",
     );
   } else if (duplicated) {
     console.warn(
@@ -999,7 +1051,7 @@ function operationId(given, method, url, allKnown) {
         '. ' +
         "Assuming '" +
         id +
-        "'."
+        "'.",
     );
   }
   allKnown.add(id);
@@ -1017,7 +1069,7 @@ function processServices(swagger, models, options) {
   var sortParams = options.sortParams || 'desc';
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
-	  var methodParameters = path.parameters;
+    var methodParameters = path.parameters;
     for (var method in path || {}) {
       var def = path[method];
       if (!def || method == 'parameters') {
@@ -1042,7 +1094,7 @@ function processServices(swagger, models, options) {
         def.operationId,
         method,
         url,
-        descriptor.operationIds
+        descriptor.operationIds,
       );
 
       var parameters = def.parameters || [];
@@ -1084,7 +1136,9 @@ function processServices(swagger, models, options) {
           paramIsBody: param.in === 'body',
           paramIsFormData: param.in === 'formData',
           paramIsArray: param.type === 'array',
-          paramToJson: param.in === 'formData' && paramTypeNoNull !== 'Blob' &&
+          paramToJson:
+            param.in === 'formData' &&
+            paramTypeNoNull !== 'Blob' &&
             paramTypeNoNull !== 'string',
           paramDescription: param.description,
           paramComments: toComments(param.description, 2),
@@ -1098,11 +1152,17 @@ function processServices(swagger, models, options) {
         if (!a.paramRequired && b.paramRequired) return 1;
         switch (sortParams) {
           case 'asc':
-            return a.paramName > b.paramName ? 1 :
-              a.paramName < b.paramName ? -1 : 0;
+            return a.paramName > b.paramName
+              ? 1
+              : a.paramName < b.paramName
+              ? -1
+              : 0;
           case 'desc':
-            return a.paramName > b.paramName ? -1 :
-              a.paramName < b.paramName ? 1 : 0;
+            return a.paramName > b.paramName
+              ? -1
+              : a.paramName < b.paramName
+              ? 1
+              : 0;
           default:
             return 0;
         }
@@ -1151,7 +1211,8 @@ function processServices(swagger, models, options) {
         docString += '\n@return ' + operationResponses.resultDescription;
       }
       function getOperationName(string) {
-        if (options.camelCase) return string.charAt(0).toLowerCase() + string.slice(1);
+        if (options.camelCase)
+          return string.charAt(0).toLowerCase() + string.slice(1);
         else return string;
       }
       var operation = {
@@ -1160,8 +1221,11 @@ function processServices(swagger, models, options) {
         operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),
         operationPath: url,
-        operationPathExpression:
-          toPathExpression(operationParameters, paramsClass, url),
+        operationPathExpression: toPathExpression(
+          operationParameters,
+          paramsClass,
+          url,
+        ),
         operationResultType: resultType,
         operationHttpResponseType: '__StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
@@ -1177,23 +1241,26 @@ function processServices(swagger, models, options) {
       operation.operationIsVoid = actualType === 'void';
       operation.operationIsString = actualType === 'string';
       operation.operationIsNumber = actualType === 'number';
-      operation.operationIsOther =
-        !['void', 'number', 'boolean'].includes(actualType);
+      operation.operationIsOther = !['void', 'number', 'boolean'].includes(
+        actualType,
+      );
       operation.operationIsBoolean = actualType === 'boolean';
       operation.operationIsEnum = modelResult && modelResult.modelIsEnum;
       operation.operationIsObject = modelResult && modelResult.modelIsObject;
       operation.operationIsPrimitiveArray =
-        !modelResult && (resultType.toString().includes('Array<') ||
+        !modelResult &&
+        (resultType.toString().includes('Array<') ||
           resultType.toString().includes('[]'));
       operation.operationIsFile = actualType === 'Blob';
-      operation.operationResponseType =
-        operation.operationIsFile ? 'blob' :
-        operation.operationIsVoid ||
-        operation.operationIsString ||
-        operation.operationIsNumber ||
-        operation.operationIsBoolean ||
-        operation.operationIsEnum ?
-          'text' : 'json';
+      operation.operationResponseType = operation.operationIsFile
+        ? 'blob'
+        : operation.operationIsVoid ||
+          operation.operationIsString ||
+          operation.operationIsNumber ||
+          operation.operationIsBoolean ||
+          operation.operationIsEnum
+        ? 'text'
+        : 'json';
       operation.operationIsUnknown = !(
         operation.operationIsVoid ||
         operation.operationIsString ||
@@ -1229,8 +1296,8 @@ function processServices(swagger, models, options) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var status = Number(code);
-        var actualDeps = (status < 200 || status >= 300)
-          ? errorDependencies : dependencies;
+        var actualDeps =
+          status < 200 || status >= 300 ? errorDependencies : dependencies;
         var response = op.operationResponses[code];
         if (response.type) {
           var type = response.type;

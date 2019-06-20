@@ -3,9 +3,7 @@
   "id": "https://github.com/cyclosproject/ng-swagger-gen/blob/master/ng-swagger-gen-schema.json",
   "title": "Options for ng-swagger-gen",
   "type": "object",
-  "required": [
-    "swagger"
-  ],
+  "required": ["swagger"],
   "properties": {
     "$schema": {
       "type": "string"
@@ -51,9 +49,7 @@
     "sortParams": {
       "description": "How to sort operation parameters. Required always come first. For backwards compatibility, the default value is 'desc', but 'none' is recommended for new projects.",
       "type": "string",
-      "enum": [
-        "none", "asc", "desc"
-      ],
+      "enum": ["none", "asc", "desc"],
       "default": "desc"
     },
     "defaultTag": {
@@ -99,6 +95,10 @@
       "description": "Generates service methods in camelCase instead of PascalCase",
       "type": "boolean",
       "default": "false"
+    },
+    "templateOptions": {
+      "description": "Override options for Mustache templates",
+      "type": "object"
     }
   }
 }

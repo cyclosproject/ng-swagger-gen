@@ -1,5 +1,4 @@
-ng-swagger-gen: A Swagger 2.0 code generator for Angular
----
+## ng-swagger-gen: A Swagger 2.0 code generator for Angular
 
 This project is a NPM module that generates model interfaces and web service
 clients from a [Swagger 2.0](http://swagger.io/)
@@ -77,6 +76,7 @@ Here are a few notes:
 - Probably many more.
 
 ## Requirements
+
 The generator itself has very few requirements, basically
 [json-schema-ref-parser](https://www.npmjs.com/package/json-schema-ref-parser),
 [argparse](https://www.npmjs.com/package/argparse) and
@@ -89,12 +89,15 @@ If you are stuck on previous versions of Angular / RxJS, you can use
 `ng-swagger-gen` version as `~0.11.0`, which supports Angular 4.3, and RxJS 5.5.
 
 ## How to use it
+
 In your project, run:
+
 ```bash
 cd <your_angular_app_dir>
 npm install ng-swagger-gen --save-dev
 node_modules/.bin/ng-swagger-gen -i <path_to_swagger_json> [-o output_dir]
 ```
+
 Where:
 
 - `path_to_swagger_json` is either a relative path to the Swagger JSON
@@ -109,6 +112,7 @@ Please, run the `ng-swagger-gen` with the `--help` argument to view all
 available command line arguments.
 
 ### Generated folder structure
+
 The folder `src/app/api` (or your custom folder) will contain the following
 structure:
 
@@ -162,6 +166,7 @@ The files are:
   injection on your application.
 
 ## Using a configuration file
+
 On regular usage it is recommended to use a configuration file instead of
 passing command-line arguments to `ng-swagger-gen`. The default configuration
 file name is `ng-swagger-gen.json`, and should be placed on the root folder
@@ -192,6 +197,7 @@ But, if the specified `prefix` in the configuration file is, for example,
 and `CustomersConfiguration`. The prefix support has been added in version 1.3.
 
 ### Generating the configuration file
+
 To generate a configuration file, run the following in the root folder of
 your project;
 
@@ -205,6 +211,7 @@ the output directory that were specified together. Both are optional, and the
 file is generated anyway.
 
 ### Configuration file reference
+
 The supported properties in the JSON file are:
 
 - `swagger`: The location of the swagger descriptor in JSON format.
@@ -239,6 +246,7 @@ The supported properties in the JSON file are:
   exporting values as constants and providing the values() method. Setting to
   false will reduce the size of the generated code. Defaults to true.
 - `templates`: Path to override the Mustache templates used to generate files.
+- `templateOptions`: Object to override options for Mustache templates.
 - `generateExamples`: When set to true, for models that provide an
   [example](https://swagger.io/docs/specification/2-0/adding-examples/)
   section, will generate a corresponding `<model>.example.ts` file, exporting a
@@ -247,17 +255,15 @@ The supported properties in the JSON file are:
 - `camelCase`: Generates service methods in camelCase instead of PascalCase.
 
 ### Configuration file example
+
 The following is an example of a configuration file which will choose a few
 tags to generate, and chose not to generate the `ApiModule` class:
+
 ```json
 {
   "$schema": "./node_modules/ng-swagger-gen/ng-swagger-gen-schema.json",
   "swagger": "my-swagger.json",
-  "includeTags": [
-    "Blogs",
-    "Comments",
-    "Users"
-  ],
+  "includeTags": ["Blogs", "Comments", "Users"],
   "apiModule": false
 }
 ```
@@ -267,6 +273,7 @@ generation of any interfaces for models which are not used by any of the
 generated services.
 
 ## Setting up a node script
+
 Regardless If your Angular project was generated or is managed by
 [Angular CLI](https://cli.angular.io/), or you have started your project with
 some other seed (for example, using [webpack](https://webpack.js.org/)
@@ -275,6 +282,7 @@ consistent with the swagger descriptor.
 
 To do so, create the `ng-swagger-gen.json` configuration file and add the
 following `scripts` to your `package.json`:
+
 ```json
 {
   "scripts": {
@@ -283,11 +291,13 @@ following `scripts` to your `package.json`:
   }
 }
 ```
+
 This way whenever you run `npm start` or `npm run build`, the API classes
 will be generated before actually serving / building your application.
 
 Also, if you use several configuration files, you can specify multiple times
 the call to `ng-swagger-gen`, like:
+
 ```json
 {
   "scripts": {
@@ -298,28 +308,24 @@ the call to `ng-swagger-gen`, like:
 ```
 
 ## Specifying the root URL / web service endpoint
+
 The easiest way to specify a custom root URL (web service endpoint URL) is to
 use `forRoot` method of `ApiModule` and set the `rootUrl` property from there.
 
 ```typescript
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    ApiModule.forRoot({rootUrl: 'https://some-root-url.com'}),
-  ],
-  bootstrap: [
-    AppComponent
-  ]
+  declarations: [AppComponent],
+  imports: [ApiModule.forRoot({ rootUrl: 'https://some-root-url.com' })],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
 ```
 
 Alternatively, you can inject the `ApiConfiguration` instance in some service
 or component, such as the `AppComponent` and set the `rootUrl` property there.
 
 ## Passing request headers / customizing the request
+
 To pass request headers, such as authorization or API keys, as well as having a
 centralized error handling, a standard
 [HttpInterceptor](https://angular.io/guide/http#intercepting-all-requests-or-responses) should
@@ -331,20 +337,28 @@ Here is an example:
 ```typescript
 @Injectable()
 export class ApiInterceptor implements HttpInterceptor {
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(
+    req: HttpRequest<any>,
+    next: HttpHandler,
+  ): Observable<HttpEvent<any>> {
     // Apply the headers
     req = req.clone({
       setHeaders: {
-        'ApiToken': '234567890'
-      }
+        ApiToken: '234567890',
+      },
     });
 
     // Also handle errors globally
     return next.handle(req).pipe(
-      tap(x => x, err => {
-        // Handle this err
-        console.error(`Error performing request, status code = ${err.status}`);
-      })
+      tap(
+        x => x,
+        err => {
+          // Handle this err
+          console.error(
+            `Error performing request, status code = ${err.status}`,
+          );
+        },
+      ),
     );
   }
 }
@@ -363,14 +377,11 @@ import { ApiInterceptor } from './api.interceptor';
 export const API_INTERCEPTOR_PROVIDER: Provider = {
   provide: HTTP_INTERCEPTORS,
   useExisting: forwardRef(() => ApiInterceptor),
-  multi: true
+  multi: true,
 };
 
 @NgModule({
-  providers: [
-    ApiInterceptor,
-    API_INTERCEPTOR_PROVIDER
-  ]
+  providers: [ApiInterceptor, API_INTERCEPTOR_PROVIDER],
 })
 export class AppModule {}
 ```
@@ -425,7 +436,7 @@ export class ApiRequestConfiguration {
     }
     // Apply the headers to the request
     return req.clone({
-      setHeaders: headers
+      setHeaders: headers,
     });
   }
 }
@@ -436,6 +447,7 @@ And, of course, add `ApiRequestConfiguration` to your module `providers` and
 inject it on your components or services.
 
 ## Swagger extensions
+
 The swagger specification doesn't allow referencing an enumeration to be used
 as an operation parameter. Hence, `ng-swagger-gen` supports the vendor
 extension `x-type` in operations, whose value could either be a model name
@@ -443,6 +455,7 @@ representing an enumeration or `Array<EnumName>` or `List<EnumName>` (both are
 equivalents) to use an array of models.
 
 ## Who uses this project
+
 This project was developed by the [Cyclos](http://cyclos.org) development team,
 and, in fact, the [Cyclos REST API](https://demo.cyclos.org/api) is the primary
 test case for generated classes.
@@ -451,6 +464,7 @@ That doesn't mean that the generator works only for the Cyclos API. For
 instance, the following commands will generate an API client for
 [Swagger's PetStore](http://petstore.swagger.io) example, assuming
 [Angular CLI](https://cli.angular.io/) is installed:
+
 ```bash
 ng new petstore
 cd petstore

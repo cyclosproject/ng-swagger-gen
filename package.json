@@ -26,5 +26,6 @@
   },
   "bin": {
     "ng-swagger-gen": "./ng-swagger-gen"
-  }
+  },
+  "main": "./ng-swagger-gen.js"
 }

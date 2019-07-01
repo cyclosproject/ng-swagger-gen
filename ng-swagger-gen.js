@@ -1229,16 +1229,18 @@ function processServices(swagger, models, options) {
       var op = service.serviceOperations[i];
       for (var code in op.operationResponses) {
         var status = Number(code);
-        var actualDeps = (status < 200 || status >= 300)
-          ? errorDependencies : dependencies;
-        var response = op.operationResponses[code];
-        if (response.type) {
-          var type = response.type;
-          if (type && type.allTypes) {
-            // This is an inline object. Append all types
-            type.allTypes.forEach(t => actualDeps.add(t));
-          } else {
-            actualDeps.add(type);
+        if (!isNaN(status)) {
+          var actualDeps = (status < 200 || status >= 300)
+            ? errorDependencies : dependencies;
+          var response = op.operationResponses[code];
+          if (response && response.type) {
+            var type = response.type;
+            if (type && type.allTypes) {
+              // This is an inline object. Append all types
+              type.allTypes.forEach(t => actualDeps.add(t));
+            } else {
+              actualDeps.add(type);
+            }
           }
         }
       }

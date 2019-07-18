@@ -119,7 +119,7 @@ function doGenerate(swagger, options) {
   // Write the models and examples
   var modelsArray = [];
   for (var modelName in models) {
-    var model = models[modelName];
+    var model = models[normalizeModelName(modelName)];
     if (model.modelIsEnum) {
       model.enumModule = generateEnumModule;
     }
@@ -158,7 +158,7 @@ function doGenerate(swagger, options) {
       var ok = false;
       var basename = path.basename(file);
       for (var modelName in models) {
-        var model = models[modelName];
+        var model = models[normalizeModelName(modelName)];
         if (basename == model.modelFile + '.ts'
           || basename == model.modelExampleFile + '.ts'
             && model.modelExampleStr != null) {
@@ -265,6 +265,10 @@ function doGenerate(swagger, options) {
   }
 }
 
+function normalizeModelName(name) {
+  return name.toLowerCase();
+}
+
 /**
  * Applies a filter over the given services, keeping only the specific tags.
  * Also optionally removes any unused models, even services are filtered.
@@ -320,7 +324,7 @@ function applyTagFilter(models, services, options) {
 
     // Remove all models that are unused
     for (var modelName in models) {
-      var model = models[modelName];
+      var model = models[normalizeModelName(modelName)];
       if (!allDependencies.has(model.modelClass)) {
         // This model is not used - remove it
         console.info(
@@ -328,7 +332,7 @@ function applyTagFilter(models, services, options) {
             modelName +
             ' because it was not used by any service'
         );
-        delete models[modelName];
+        delete models[normalizeModelName(modelName)];
       }
     }
   }
@@ -510,7 +514,7 @@ DependenciesResolver.prototype.add = function(input) {
   for (let i = 0; i < deps.length; i++) {
     let dep = deps[i];
     if (this.dependencyNames.indexOf(dep) < 0 && dep !== this.ownType) {
-      var depModel = this.models[dep];
+      var depModel = this.models[normalizeModelName(dep)];
       if (depModel) {
         this.dependencies.push(depModel);
         this.dependencyNames.push(depModel.modelClass);
@@ -618,13 +622,13 @@ function processModels(swagger, options) {
       }
     }
 
-    models[name] = descriptor;
-    models[descriptor.modelClass] = descriptor;
+    models[normalizeModelName(name)] = descriptor;
+    models[normalizeModelName(descriptor.modelClass)] = descriptor;
   }
 
   // Now that we know all models, process the hierarchies
   for (name in models) {
-    model = models[name];
+    model = models[normalizeModelName(name)];
     if (!model.modelIsObject) {
       // Only objects can have hierarchies
       continue;
@@ -634,7 +638,7 @@ function processModels(swagger, options) {
     var parentName = model.modelParent;
     if (parentName) {
       // Make the parent be the actual model, not the name
-      model.modelParent = models[parentName];
+      model.modelParent = models[normalizeModelName(parentName)];
 
       // Append this model on the parent's subclasses
       model.modelParent.modelSubclasses.push(model);
@@ -649,7 +653,7 @@ function processModels(swagger, options) {
     else dependencies.add(t);
   };
   for (name in models) {
-    model = models[name];
+    model = models[normalizeModelName(name)];
     if (model.modelIsEnum || model.modelIsSimple && !model.modelSimpleType.allTypes) {
       // Enums or simple types have no dependencies
       continue;
@@ -1168,7 +1172,7 @@ function processServices(swagger, models, options) {
         operationParameters: operationParameters,
         operationResponses: operationResponses,
       };
-      var modelResult = models[removeBrackets(resultType)];
+      var modelResult = models[normalizeModelName(removeBrackets(resultType))];
       var actualType = resultType;
       if (modelResult && modelResult.modelIsSimple) {
         actualType = modelResult.modelSimpleType;

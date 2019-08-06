@@ -1072,8 +1072,9 @@ function processServices(swagger, models, options) {
         }
         var paramTypeNoNull = removeBrackets(paramType, true);
         var paramVar = toIdentifier(param.name);
+        paramVar = options.camelCaseServiceParams ? paramVar.charAt(0).toLowerCase() + paramVar.slice(1) : paramVar;
         var paramDescriptor = {
-          paramName: param.name,
+          paramName: options.camelCaseServiceParams ? param.name.charAt(0).toLowerCase() + param.name.slice(1) : param.name,
           paramIn: param.in,
           paramVar: paramVar,
           paramFullVar: (paramsClass == null ? '' : 'params.') + paramVar,

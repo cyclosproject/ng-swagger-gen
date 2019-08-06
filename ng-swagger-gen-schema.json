@@ -99,6 +99,11 @@
       "description": "Generates service methods in camelCase instead of PascalCase",
       "type": "boolean",
       "default": "false"
+    },
+    "camelCaseServiceParams": {
+      "description": "Generates service method parameters in forced camelCase",
+      "type": "boolean",
+      "default": "false"
     }
   }
 }

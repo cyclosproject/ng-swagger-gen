@@ -957,8 +957,14 @@ function processResponses(swagger, def, path, models) {
     var type = propertyType(response.schema);
     if (/2\d\d/.test(code)) {
       // Successful response
-      operationResponses.resultType = type;
-      operationResponses.resultDescription = response.description;
+      if (operationResponses.resultType) {
+        // More than one successful response, use union type
+        operationResponses.resultType += ` | ${type}`;
+        operationResponses.resultDescription += ` or ${response.description}`
+      } else {
+        operationResponses.resultType = type;
+        operationResponses.resultDescription = response.description;
+      }
       var headers = response.headers || {};
       for (var prop in headers) {
         // This operation returns at least one header

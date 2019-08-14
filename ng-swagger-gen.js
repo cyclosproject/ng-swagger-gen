@@ -763,6 +763,9 @@ function removeBrackets(type, nullOrUndefinedOnly) {
     nullOrUndefinedOnly = false;
   }
   if (typeof type === 'object') {
+    if (type.allTypes && type.allTypes.length === 1) {
+      return removeBrackets(type.allTypes[0], nullOrUndefinedOnly);
+    }
     return 'object';
   }
   else if(type.replace(/ /g, '') !== type) {

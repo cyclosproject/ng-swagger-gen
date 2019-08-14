@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const Mustache = require('mustache');
 const $RefParser = require('json-schema-ref-parser');
+var npmConfig = require('npm-conf');
 
 /**
  * Main generate function
@@ -17,8 +18,7 @@ function ngSwaggerGen(options) {
     process.exit(1);
   }
 
-  var globalTunnel = require('global-tunnel-ng');
-  globalTunnel.initialize();
+  setupProxy();
   
   $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
     data => {
@@ -32,6 +32,73 @@ function ngSwaggerGen(options) {
   ).catch(function (error) {
     console.error(`Error: ${error}`);
   });
+}
+
+/**
+ * Sets up the environment to work behind proxies.
+ * Uses global-agent from NodeJS >= 10,
+ * and global-tunnel-ng for previous versions.
+ */
+function setupProxy() {
+  var globalAgent = require('global-agent');
+  var globalTunnel = require('global-tunnel-ng');
+  var proxyAddress = getProxyAndSetupEnv();
+
+  const NODEJS_VERSION = parseInt(process.version.slice(1).split('.')[0], 10);
+  if (NODEJS_VERSION >= 10 && proxyAddress) {
+    // `global-agent` works with Node.js v10 and above.
+    globalAgent.bootstrap();
+    global.GLOBAL_AGENT.HTTP_PROXY = proxyAddress;
+  } else {
+    // `global-tunnel-ng` works only with Node.js v10 and below.
+    globalTunnel.initialize();
+  }
+}
+
+/**
+ * For full compatibility with globalTunnel we need to check a few places for
+ * the correct proxy address. Additionally we need to remove HTTP_PROXY
+ * and HTTPS_PROXY environment variables, if present.
+ * This is again for globalTunnel compatibility.
+ * 
+ * This method only needs to be run when global-agent is used
+ */
+function getProxyAndSetupEnv() {
+  var proxyEnvVariableNames = [
+    'https_proxy',
+    'HTTPS_PROXY',
+    'http_proxy',
+    'HTTP_PROXY'
+  ];
+
+  var npmVariableNames = ['https-proxy', 'http-proxy', 'proxy'];
+
+  var key;
+  var val;
+  var result;
+  for (var i = 0; i < proxyEnvVariableNames.length; i++) {
+    key = proxyEnvVariableNames[i];
+    val = process.env[key];
+    if (val) {
+      // Get the first non-empty
+      result = result || val;
+      // Delete all
+      // NB: we do it here to prevent double proxy handling
+      // (and for example path change)
+      // by us and the `request` module or other sub-dependencies
+      delete process.env[key];
+    }
+  }
+
+  if (!result) {
+    var config = npmConfig();
+
+    for (i = 0; i < npmVariableNames.length && !result; i++) {
+      result = config.get(npmVariableNames[i]);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -890,8 +957,14 @@ function processResponses(swagger, def, path, models) {
     var type = propertyType(response.schema);
     if (/2\d\d/.test(code)) {
       // Successful response
-      operationResponses.resultType = type;
-      operationResponses.resultDescription = response.description;
+      if (operationResponses.resultType) {
+        // More than one successful response, use union type
+        operationResponses.resultType += ` | ${type}`;
+        operationResponses.resultDescription += ` or ${response.description}`
+      } else {
+        operationResponses.resultType = type;
+        operationResponses.resultDescription = response.description;
+      }
       var headers = response.headers || {};
       for (var prop in headers) {
         // This operation returns at least one header

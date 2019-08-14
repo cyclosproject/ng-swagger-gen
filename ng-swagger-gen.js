@@ -1159,7 +1159,7 @@ function processServices(swagger, models, options) {
         operationParamsClass: paramsClass,
         operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),
-        operationPath: url,
+        operationPath: url.replace(/\'/g, '\\\''),
         operationPathExpression:
           toPathExpression(operationParameters, paramsClass, url),
         operationResultType: resultType,

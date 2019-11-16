@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const Mustache = require('mustache');
 const $RefParser = require('json-schema-ref-parser');
+var npmConfig = require('npm-conf');
 
 /**
  * Main generate function
@@ -17,8 +18,7 @@ function ngSwaggerGen(options) {
     process.exit(1);
   }
 
-  var globalTunnel = require('global-tunnel-ng');
-  globalTunnel.initialize();
+  setupProxy();
   
   $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
     data => {
@@ -32,6 +32,73 @@ function ngSwaggerGen(options) {
   ).catch(function (error) {
     console.error(`Error: ${error}`);
   });
+}
+
+/**
+ * Sets up the environment to work behind proxies.
+ * Uses global-agent from NodeJS >= 10,
+ * and global-tunnel-ng for previous versions.
+ */
+function setupProxy() {
+  var globalAgent = require('global-agent');
+  var globalTunnel = require('global-tunnel-ng');
+  var proxyAddress = getProxyAndSetupEnv();
+
+  const NODEJS_VERSION = parseInt(process.version.slice(1).split('.')[0], 10);
+  if (NODEJS_VERSION >= 10 && proxyAddress) {
+    // `global-agent` works with Node.js v10 and above.
+    globalAgent.bootstrap();
+    global.GLOBAL_AGENT.HTTP_PROXY = proxyAddress;
+  } else {
+    // `global-tunnel-ng` works only with Node.js v10 and below.
+    globalTunnel.initialize();
+  }
+}
+
+/**
+ * For full compatibility with globalTunnel we need to check a few places for
+ * the correct proxy address. Additionally we need to remove HTTP_PROXY
+ * and HTTPS_PROXY environment variables, if present.
+ * This is again for globalTunnel compatibility.
+ * 
+ * This method only needs to be run when global-agent is used
+ */
+function getProxyAndSetupEnv() {
+  var proxyEnvVariableNames = [
+    'https_proxy',
+    'HTTPS_PROXY',
+    'http_proxy',
+    'HTTP_PROXY'
+  ];
+
+  var npmVariableNames = ['https-proxy', 'http-proxy', 'proxy'];
+
+  var key;
+  var val;
+  var result;
+  for (var i = 0; i < proxyEnvVariableNames.length; i++) {
+    key = proxyEnvVariableNames[i];
+    val = process.env[key];
+    if (val) {
+      // Get the first non-empty
+      result = result || val;
+      // Delete all
+      // NB: we do it here to prevent double proxy handling
+      // (and for example path change)
+      // by us and the `request` module or other sub-dependencies
+      delete process.env[key];
+    }
+  }
+
+  if (!result) {
+    var config = npmConfig();
+
+    for (i = 0; i < npmVariableNames.length && !result; i++) {
+      result = config.get(npmVariableNames[i]);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -119,7 +186,7 @@ function doGenerate(swagger, options) {
   // Write the models and examples
   var modelsArray = [];
   for (var modelName in models) {
-    var model = models[modelName];
+    var model = models[normalizeModelName(modelName)];
     if (model.modelIsEnum) {
       model.enumModule = generateEnumModule;
     }
@@ -158,7 +225,7 @@ function doGenerate(swagger, options) {
       var ok = false;
       var basename = path.basename(file);
       for (var modelName in models) {
-        var model = models[modelName];
+        var model = models[normalizeModelName(modelName)];
         if (basename == model.modelFile + '.ts'
           || basename == model.modelExampleFile + '.ts'
             && model.modelExampleStr != null) {
@@ -265,6 +332,10 @@ function doGenerate(swagger, options) {
   }
 }
 
+function normalizeModelName(name) {
+  return name.toLowerCase();
+}
+
 /**
  * Applies a filter over the given services, keeping only the specific tags.
  * Also optionally removes any unused models, even services are filtered.
@@ -320,7 +391,7 @@ function applyTagFilter(models, services, options) {
 
     // Remove all models that are unused
     for (var modelName in models) {
-      var model = models[modelName];
+      var model = models[normalizeModelName(modelName)];
       if (!allDependencies.has(model.modelClass)) {
         // This model is not used - remove it
         console.info(
@@ -328,7 +399,7 @@ function applyTagFilter(models, services, options) {
             modelName +
             ' because it was not used by any service'
         );
-        delete models[modelName];
+        delete models[normalizeModelName(modelName)];
       }
     }
   }
@@ -510,7 +581,7 @@ DependenciesResolver.prototype.add = function(input) {
   for (let i = 0; i < deps.length; i++) {
     let dep = deps[i];
     if (this.dependencyNames.indexOf(dep) < 0 && dep !== this.ownType) {
-      var depModel = this.models[dep];
+      var depModel = this.models[normalizeModelName(dep)];
       if (depModel) {
         this.dependencies.push(depModel);
         this.dependencyNames.push(depModel.modelClass);
@@ -618,13 +689,13 @@ function processModels(swagger, options) {
       }
     }
 
-    models[name] = descriptor;
-    models[descriptor.modelClass] = descriptor;
+    models[normalizeModelName(name)] = descriptor;
+    models[normalizeModelName(descriptor.modelClass)] = descriptor;
   }
 
   // Now that we know all models, process the hierarchies
   for (name in models) {
-    model = models[name];
+    model = models[normalizeModelName(name)];
     if (!model.modelIsObject) {
       // Only objects can have hierarchies
       continue;
@@ -634,7 +705,7 @@ function processModels(swagger, options) {
     var parentName = model.modelParent;
     if (parentName) {
       // Make the parent be the actual model, not the name
-      model.modelParent = models[parentName];
+      model.modelParent = models[normalizeModelName(parentName)];
 
       // Append this model on the parent's subclasses
       model.modelParent.modelSubclasses.push(model);
@@ -649,7 +720,7 @@ function processModels(swagger, options) {
     else dependencies.add(t);
   };
   for (name in models) {
-    model = models[name];
+    model = models[normalizeModelName(name)];
     if (model.modelIsEnum || model.modelIsSimple && !model.modelSimpleType.allTypes) {
       // Enums or simple types have no dependencies
       continue;
@@ -692,6 +763,9 @@ function removeBrackets(type, nullOrUndefinedOnly) {
     nullOrUndefinedOnly = false;
   }
   if (typeof type === 'object') {
+    if (type.allTypes && type.allTypes.length === 1) {
+      return removeBrackets(type.allTypes[0], nullOrUndefinedOnly);
+    }
     return 'object';
   }
   else if(type.replace(/ /g, '') !== type) {
@@ -753,6 +827,12 @@ function propertyType(property) {
     return {
       allTypes: mergeTypes(...variants),
       toString: () => variants.join(' | ')
+    };
+  } else if (!property.type && property.allOf) {
+    let variants = (property.allOf).map(propertyType);
+    return {
+      allTypes: mergeTypes(...variants),
+      toString: () => variants.join(' & ')
     };
   } else if (Array.isArray(property.type)) {
     let variants = property.type.map(type => propertyType(Object.assign({}, property, {type})));
@@ -890,8 +970,14 @@ function processResponses(swagger, def, path, models) {
     var type = propertyType(response.schema);
     if (/2\d\d/.test(code)) {
       // Successful response
-      operationResponses.resultType = type;
-      operationResponses.resultDescription = response.description;
+      if (operationResponses.resultType) {
+        // More than one successful response, use union type
+        operationResponses.resultType += ` | ${type}`;
+        operationResponses.resultDescription += ` or ${response.description}`
+      } else {
+        operationResponses.resultType = type;
+        operationResponses.resultDescription = response.description;
+      }
       var headers = response.headers || {};
       for (var prop in headers) {
         // This operation returns at least one header
@@ -1159,7 +1245,7 @@ function processServices(swagger, models, options) {
         operationParamsClass: paramsClass,
         operationParamsClassComments: paramsClassComments,
         operationMethod: method.toLocaleUpperCase(),
-        operationPath: url,
+        operationPath: url.replace(/\'/g, '\\\''),
         operationPathExpression:
           toPathExpression(operationParameters, paramsClass, url),
         operationResultType: resultType,
@@ -1168,7 +1254,7 @@ function processServices(swagger, models, options) {
         operationParameters: operationParameters,
         operationResponses: operationResponses,
       };
-      var modelResult = models[removeBrackets(resultType)];
+      var modelResult = models[normalizeModelName(removeBrackets(resultType))];
       var actualType = resultType;
       if (modelResult && modelResult.modelIsSimple) {
         actualType = modelResult.modelSimpleType;

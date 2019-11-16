@@ -1,6 +1,10 @@
 {{#paramIsQuery}}{{#paramIsArray}}    ({{paramFullVar}} || []).forEach(val => {if (val != null) __params = __params.append('{{paramName}}', val.toString())});{{/paramIsArray
 }}{{^paramIsArray}}    if ({{paramFullVar}} != null) __params = __params.set('{{paramName}}', {{paramFullVar}}.toString());{{/paramIsArray}}{{/paramIsQuery
-}}{{#paramIsFormData}}   if({{paramFullVar}} !== null && typeof {{paramFullVar}} !== "undefined") { __formData.append('{{paramName}}', {{#paramToJson}}JSON.stringify({{paramFullVar}}){{/paramToJson}}{{^paramToJson}}{{paramFullVar}} as string | Blob{{/paramToJson}});}{{/paramIsFormData
+
+}}{{#paramIsFormData}}{{#paramIsArray}}    ({{paramFullVar}} || []).forEach(val => {if (val != null) __formData.append('{{paramName}}', {{#paramToJson}}JSON.stringify(val){{/paramToJson}}{{^paramToJson}}val as string | Blob{{/paramToJson}})});{{/paramIsArray
+}}{{^paramIsArray}}    if ({{paramFullVar}} != null) { __formData.append('{{paramName}}', {{#paramToJson}}JSON.stringify({{paramFullVar}}){{/paramToJson}}{{^paramToJson}}{{paramFullVar}} as string | Blob{{/paramToJson}});}{{/paramIsArray}}{{/paramIsFormData
+
 }}{{#paramIsHeader}}{{#paramIsArray}}    ({{paramFullVar}} || []).forEach(val => {if (val != null) __headers = __headers.append('{{paramName}}', val.toString())});{{/paramIsArray
 }}{{^paramIsArray}}    if ({{paramFullVar}} != null) __headers = __headers.set('{{paramName}}', {{paramFullVar}}.toString());{{/paramIsArray}}{{/paramIsHeader
+
 }}{{#paramIsBody}}    __body = {{paramFullVar}};{{/paramIsBody}}

@@ -7,7 +7,6 @@
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;{{#operationIsMultipart}}
-    __headers.append('Content-Type', 'multipart/form-data');
     let __formData = new FormData();
     __body = __formData;{{/operationIsMultipart}}
 {{#operationParameters}}{{>parameter}}

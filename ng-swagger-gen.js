@@ -923,7 +923,7 @@ function processProperties(swagger, properties, requiredProperties) {
   for (var name in properties) {
     var property = properties[name];
     var descriptor = {
-      propertyName: name.indexOf('-') === -1 ? name : `"${name}"`,
+      propertyName: name.indexOf('-') === -1 && name.indexOf(".") === -1 ? name : `"${name}"`,
       propertyComments: toComments(property.description, 1),
       propertyRequired: requiredProperties.indexOf(name) >= 0,
       propertyType: propertyType(property),

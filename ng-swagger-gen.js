@@ -19,7 +19,7 @@ function ngSwaggerGen(options) {
   }
 
   setupProxy();
-  
+
   $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
     data => {
       doGenerate(data, options);
@@ -60,7 +60,7 @@ function setupProxy() {
  * the correct proxy address. Additionally we need to remove HTTP_PROXY
  * and HTTPS_PROXY environment variables, if present.
  * This is again for globalTunnel compatibility.
- * 
+ *
  * This method only needs to be run when global-agent is used
  */
 function getProxyAndSetupEnv() {
@@ -494,14 +494,6 @@ function toClassName(name) {
 }
 
 /**
- * Converts a given type name into a file name of the example file
- * @param typeName
- */
-function toExampleFileName(typeName) {
-  return toFileName(typeName) + '.example';
-}
-
-/**
  * Resolves the simple reference name from a qualified reference
  */
 function simpleRef(ref) {
@@ -654,7 +646,7 @@ function processModels(swagger, options) {
     var descriptor = {
       modelName: name,
       modelClass: modelClass,
-      modelFile: toFileName(modelClass),
+      modelFile: toFileName(modelClass) + options.customFileSuffix.model,
       modelComments: toComments(model.description),
       modelParent: parent,
       modelIsObject: properties != null,
@@ -666,7 +658,7 @@ function processModels(swagger, options) {
         processProperties(swagger, properties, requiredProperties),
       modelExample: example,
       modelAdditionalPropertiesType: additionalPropertiesType,
-      modelExampleFile: toExampleFileName(name),
+      modelExampleFile: toFileName(name) + options.customFileSuffix.example,
       modelEnumValues: enumValues,
       modelElementType: elementType,
       modelSubclasses: [],
@@ -1117,7 +1109,7 @@ function processServices(swagger, models, options) {
         descriptor = {
           serviceName: tag,
           serviceClass: serviceClass + 'Service',
-          serviceFile: toFileName(serviceClass) + '.service',
+          serviceFile: toFileName(serviceClass) + options.customFileSuffix.service,
           operationIds: new Set(),
           serviceOperations: [],
         };

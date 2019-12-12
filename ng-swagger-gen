@@ -152,5 +152,8 @@ function run(options) {
   if (options.output == null) {
     options.output = schema.properties.output.default;
   }
+  if (options.customFileSuffix == null) {
+    options.customFileSuffix = schema.properties.customFileSuffix.default;
+  }
   ngSwaggerGen(options);
 }

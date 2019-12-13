@@ -5,6 +5,19 @@ function parseJSON(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
+/**
+ * check the parameter value if it is a number
+ * @param param contains the timeout value
+ */
+function checkTimeOutParam(param){
+  try{
+    parseInt(param);
+    return true;
+  }catch(err){
+    return false;
+  }
+}
+
 const DEFAULT_CONFIG = 'ng-swagger-gen.json';
 const SCHEMA = 'ng-swagger-gen-schema.json';
 const fs = require('fs');
@@ -12,6 +25,7 @@ const path = require('path');
 const ArgumentParser = require('argparse').ArgumentParser;
 const pkg = parseJSON(path.join(__dirname, "package.json"));
 const schema = parseJSON(path.join(__dirname, SCHEMA));
+
 
 var argParser = new ArgumentParser({
   version: pkg.version,
@@ -62,9 +76,22 @@ argParser.addArgument(
     dest: "genConfig"
   }
 );
+argParser.addArgument(["-t","--timeout"],{
+  help:"Add a timeout for the webrequest. Default value is 2000ms.",
+  dest:"setTimeOut"
+})
 var args = argParser.parseArgs();
 
 var config = args.config;
+
+let timeOut;
+
+//set timeout value for request. default value should be 2000ms
+if(args.setTimeOut && checkTimeOutParam(args.timeOut)){
+  timeOut=parseInt(args.setTimeOut);
+}else{
+  timeout=2000;
+}
 
 // Check the action
 var configExists = fs.existsSync(config);
@@ -87,10 +114,10 @@ if (args.genConfig) {
     if (args.output) {
       options.output = args.output;
     }
-    run(options);
+    run(options,timeOut);
   } else if (args.swagger) {
     // The args variables are the same one as the options
-    run(args);
+    run(args,timeOut);
   } else {
     // No configuration file. Show the usage and exit.
     argParser.parseArgs(["--help"]);
@@ -147,10 +174,10 @@ function askThenGenerateConfig() {
 /**
  * Runs the ng-swagger-gen generation
  */
-function run(options) {
+function run(options, timeout) {
   var ngSwaggerGen = require("./ng-swagger-gen.js");
   if (options.output == null) {
     options.output = schema.properties.output.default;
   }
-  ngSwaggerGen(options);
+  ngSwaggerGen(options,timeOut);
 }

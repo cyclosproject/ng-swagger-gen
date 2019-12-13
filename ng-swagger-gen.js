@@ -12,7 +12,7 @@ var npmConfig = require('npm-conf');
 /**
  * Main generate function
  */
-function ngSwaggerGen(options) {
+function ngSwaggerGen(options,timeout) {
   if (typeof options.swagger != 'string') {
     console.error("Swagger file not specified in the 'swagger' option");
     process.exit(1);
@@ -20,7 +20,7 @@ function ngSwaggerGen(options) {
 
   setupProxy();
   
-  $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
+  $RefParser.bundle(options.swagger, { dereference: { circular: false } ,resolve:{http:{timeout:timeout}}}).then(
     data => {
       doGenerate(data, options);
     },

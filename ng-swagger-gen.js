@@ -204,7 +204,8 @@ function doGenerate(swagger, options) {
       path.join(modelsOutput, model.modelFile + '.ts')
     );
     if (options.generateExamples && model.modelExample) {
-      var example = JSON.stringify(model.modelExample, null, 2);
+      var value = resolveRefRecursive(model.modelExample, swagger);
+      var example = JSON.stringify(value, null, 2);
       example = example.replace(/'/g, "\\'");
       example = example.replace(/"/g, "'");
       example = example.replace(/\n/g, "\n  ");
@@ -1332,6 +1333,31 @@ function processServices(swagger, models, options) {
   }
 
   return services;
+}
+
+/**
+ * Processes all $ref objects recursively
+ *
+ * @param array Array to be searched for $ref
+ * @param swagger Full Swagger Config
+ * @return {*}
+ */
+function resolveRefRecursive(array, swagger) {
+
+  if (!array || typeof array !== 'object') {
+    return array;
+  }
+
+  if (typeof array["$ref"] === "string") {
+    return resolveRefRecursive(resolveRef(swagger, array["$ref"]), swagger);
+  }
+
+  for (var key in array) {
+    var funcArgs = [array[key], swagger]
+    array[key] = resolveRefRecursive.apply(null, funcArgs);
+  }
+
+  return array;
 }
 
 module.exports = ngSwaggerGen;

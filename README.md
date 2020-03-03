@@ -245,6 +245,7 @@ The supported properties in the JSON file are:
   function called `get<Model>Example()`, which will return the data present in
   the example section.
 - `camelCase`: Generates service methods in camelCase instead of PascalCase.
+- `customFileSuffix`: Set custom suffixes for generated files
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few

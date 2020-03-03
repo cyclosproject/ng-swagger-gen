@@ -679,8 +679,8 @@ function processModels(swagger, options) {
         descriptor.modelProperties.push(property);
       }
       descriptor.modelProperties.sort((a, b) => {
-        return a.modelName < b.modelName ? -1 :
-          a.modelName > b.modelName ? 1 : 0;
+        return a.propertyName < b.propertyName ? -1 :
+          a.propertyName > b.propertyName ? 1 : 0;
       });
       if (descriptor.modelProperties.length > 0) {
         descriptor.modelProperties[

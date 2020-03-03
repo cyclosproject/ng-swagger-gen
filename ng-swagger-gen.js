@@ -1163,7 +1163,7 @@ function processServices(swagger, models, options) {
           paramIsBody: param.in === 'body',
           paramIsFormData: param.in === 'formData',
           paramIsArray: param.type === 'array',
-          paramToJson: param.in === 'formData' && paramTypeNoNull !== 'Blob' &&
+          paramToJson: param.in === 'formData' && !param.enum && paramTypeNoNull !== 'Blob' &&
             paramTypeNoNull !== 'string',
           paramDescription: param.description,
           paramComments: toComments(param.description, 2),

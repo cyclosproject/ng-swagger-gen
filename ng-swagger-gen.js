@@ -622,7 +622,7 @@ function processModels(swagger, options) {
           var enumValue = enumValues[i];
           var enumDescriptor = {
             enumName: toEnumName(enumValue),
-            enumValue: enumValue,
+            enumValue: String(enumValue).replace(/\'/g, '\\\''),
             enumIsLast: i === enumValues.length - 1,
           };
           enumValues[i] = enumDescriptor;

@@ -20,7 +20,9 @@ function ngSwaggerGen(options) {
 
   setupProxy();
 
-  $RefParser.bundle(options.swagger, { dereference: { circular: false } }).then(
+  $RefParser.bundle(options.swagger,
+    { dereference: { circular: false },
+    resolve: { http: { timeout: 20000 } } }).then(
     data => {
       doGenerate(data, options);
     },

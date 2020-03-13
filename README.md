@@ -9,6 +9,7 @@ The generated classes follow the principles of
 
 Angular / RxJS version compatibility:
 
+- Starting with version `2.0.0`, Angular 7+ is required.
 - Starting with version `1.0.0`, Angular 6+ is required.
 - Version `0.11.x` supports Angular 4.3+ (with rxjs 5.5) and Angular 5.
 

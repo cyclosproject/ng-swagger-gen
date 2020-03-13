@@ -24,7 +24,7 @@ import { {{configurationClass}}, {{configurationInterface}} } from './{{configur
   ],
 })
 export class {{moduleClass}} {
-  static forRoot(customParams: {{configurationInterface}}): ModuleWithProviders {
+  static forRoot(customParams: {{configurationInterface}}): ModuleWithProviders<{{moduleClass}}> {
     return {
       ngModule: {{moduleClass}},
       providers: [

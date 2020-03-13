@@ -600,7 +600,7 @@ function processModels(swagger, options) {
   var models = {};
   for (name in swagger.definitions) {
     model = swagger.definitions[name];
-    var parent = null;
+    var parents = null;
     var properties = null;
     var requiredProperties = null;
     var additionalPropertiesType = false;
@@ -609,10 +609,11 @@ function processModels(swagger, options) {
     var elementType = null;
     var simpleType = null;
     if (model.allOf != null && model.allOf.length > 0) {
-      parent = simpleRef((model.allOf[0] || {}).$ref);
-      properties = (model.allOf[1] || {}).properties || {};
-      requiredProperties = (model.allOf[1] || {}).required || [];
-    } else if (model.type === 'string') {
+      parents = model.allOf
+        .filter(parent => !!parent.$ref)
+        .map(parent => simpleRef(parent.$ref));
+      properties = (model.allOf.find(val => !!val.properties) || {}).properties || {};
+      requiredProperties = (model.allOf.find(val => !!val.required) || {}).required || [];
       enumValues = model.enum || [];
       if (enumValues.length == 0) {
         simpleType = 'string';
@@ -651,7 +652,7 @@ function processModels(swagger, options) {
       modelClass: modelClass,
       modelFile: toFileName(modelClass) + options.customFileSuffix.model,
       modelComments: toComments(model.description),
-      modelParent: parent,
+      modelParents: parents,
       modelIsObject: properties != null,
       modelIsEnum: enumValues != null,
       modelIsArray: elementType != null,
@@ -697,13 +698,19 @@ function processModels(swagger, options) {
     }
 
     // Process the hierarchy
-    var parentName = model.modelParent;
-    if (parentName) {
-      // Make the parent be the actual model, not the name
-      model.modelParent = models[normalizeModelName(parentName)];
+    var parentNames = model.modelParents;
+    if (parentNames && parentNames.length > 0) {
+      model.modelParents = parentNames
+        .filter(parentName => !!parentName)
+        .map(parentName => {
+        // Make the parent be the actual model, not the name
+        var parentModel =  models[normalizeModelName(parentName)];
 
-      // Append this model on the parent's subclasses
-      model.modelParent.modelSubclasses.push(model);
+        // Append this model on the parent's subclasses
+        parentModel.modelSubclasses.push(model);
+        return parentModel;
+      });
+      model.modelParents[0].parentIsFirst = true;
     }
   }
 
@@ -723,8 +730,10 @@ function processModels(swagger, options) {
     var dependencies = new DependenciesResolver(models, model.modelName);
 
     // The parent is a dependency
-    if (model.modelParent) {
-      dependencies.add(model.modelParent.modelName);
+    if (model.modelParents) {
+      model.modelParents.forEach(modelParent => {
+        dependencies.add(modelParent.modelName);
+      })
     }
 
     // Each property may add a dependency
@@ -824,7 +833,9 @@ function propertyType(property) {
       toString: () => variants.join(' | ')
     };
   } else if (!property.type && property.allOf) {
-    let variants = (property.allOf).map(propertyType);
+    // Do not want to include x-nullable types as part of an allOf union.
+    let variants = (property.allOf).filter(prop => !prop['x-nullable']).map(propertyType);
+
     return {
       allTypes: mergeTypes(...variants),
       toString: () => variants.join(' & ')

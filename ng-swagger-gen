@@ -62,6 +62,15 @@ argParser.addArgument(
     dest: "genConfig"
   }
 );
+argParser.addArgument(
+  ["--timeout"],
+  {
+    help: "The amount of time (in milliseconds) to wait for a response from the" +
+    " server when downloading files. The default is 20 seconds.",
+    type: "int",
+    dest: "timeout"
+  }
+);
 var args = argParser.parseArgs();
 
 var config = args.config;
@@ -86,6 +95,9 @@ if (args.genConfig) {
     }
     if (args.output) {
       options.output = args.output;
+    }
+    if (args.timeout) {
+      options.timeout = args.timeout;
     }
     run(options);
   } else if (args.swagger) {
@@ -154,6 +166,9 @@ function run(options) {
   }
   if (options.customFileSuffix == null) {
     options.customFileSuffix = schema.properties.customFileSuffix.default;
+  }
+  if (options.timeout == null) {
+    options.timeout = schema.properties.timeout.default;
   }
   ngSwaggerGen(options);
 }

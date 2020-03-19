@@ -122,6 +122,11 @@
         "example": ".example",
         "service": ".service"
       }
+    },
+    "timeout":{
+      "description": "The amount of time (in milliseconds) to wait for a response from the server when downloading files. The default is 20 seconds.",
+      "type": "number",
+      "default": 20000
     }
   }
 }

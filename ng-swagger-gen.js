@@ -1212,6 +1212,14 @@ function processServices(swagger, models, options) {
         }
       }
       var docString = (def.description || '').trim();
+      var summary = (def.summary || path.summary || '').trim();
+      if (summary !== '') {
+        if (docString === '') {
+          docString = summary;
+        } else {
+          docString = summary + '\n\n' + docString;
+        }
+      }
       if (paramsClass == null) {
         for (i = 0; i < operationParameters.length; i++) {
           param = operationParameters[i];

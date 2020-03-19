@@ -22,7 +22,7 @@ function ngSwaggerGen(options) {
 
   $RefParser.bundle(options.swagger,
     { dereference: { circular: false },
-    resolve: { http: { timeout: 20000 } } }).then(
+    resolve: { http: { timeout: options.timeout } } }).then(
     data => {
       doGenerate(data, options);
     },

@@ -22,7 +22,7 @@ function ngSwaggerGen(options) {
 
   $RefParser.bundle(options.swagger,
     { dereference: { circular: false },
-    resolve: { http: { timeout: 20000 } } }).then(
+    resolve: { http: { timeout: options.timeout } } }).then(
     data => {
       doGenerate(data, options);
     },
@@ -146,6 +146,19 @@ function doGenerate(swagger, options) {
     if (pos >= 0) {
       var fullFile = path.join(options.templates, file);
       templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
+    }
+  });
+
+  // read the fallback templates
+  var fallbackTemplates = path.join(__dirname, 'templates');
+  fs.readdirSync(fallbackTemplates)
+    .forEach(function (file) {
+    var pos = file.indexOf('.mustache');
+    if (pos >= 0) {
+      var fullFile = path.join(fallbackTemplates, file);
+      if (!(file.substr(0, pos) in templates)) {
+        templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
+      }
     }
   });
 
@@ -1220,6 +1233,14 @@ function processServices(swagger, models, options) {
         }
       }
       var docString = (def.description || '').trim();
+      var summary = (def.summary || path.summary || '').trim();
+      if (summary !== '') {
+        if (docString === '') {
+          docString = summary;
+        } else {
+          docString = summary + '\n\n' + docString;
+        }
+      }
       if (paramsClass == null) {
         for (i = 0; i < operationParameters.length; i++) {
           param = operationParameters[i];

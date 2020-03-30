@@ -1,4 +1,4 @@
-{{{modelComments}}}export interface {{modelClass}} {{#modelParentNames}}{{#parentIsFirst}}extends {{/parentIsFirst}}{{^parentIsFirst}}, {{/parentIsFirst}}{{modelClass}}{{/modelParentNames}} {
+{{{modelComments}}}export interface {{modelClass}} {{#modelParentNames}}{{#parentIsFirst}}extends {{/parentIsFirst}}{{^parentIsFirst}}, {{/parentIsFirst}}{{modelClass}}{{/modelParentNames}}{
 {{#modelProperties}}
 {{{propertyComments}}}{{&propertyName}}{{^propertyRequired}}?{{/propertyRequired}}: {{{propertyType}}};
 {{/modelProperties}}

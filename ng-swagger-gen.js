@@ -149,6 +149,19 @@ function doGenerate(swagger, options) {
     }
   });
 
+  // read the fallback templates
+  var fallbackTemplates = path.join(__dirname, 'templates');
+  fs.readdirSync(fallbackTemplates)
+    .forEach(function (file) {
+    var pos = file.indexOf('.mustache');
+    if (pos >= 0) {
+      var fullFile = path.join(fallbackTemplates, file);
+      if (!(file.substr(0, pos) in templates)) {
+        templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
+      }
+    }
+  });
+
   // Prepare the output folder
   const modelsOutput = path.join(output, 'models');
   const servicesOutput = path.join(output, 'services');

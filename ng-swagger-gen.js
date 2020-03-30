@@ -628,7 +628,10 @@ function processModels(swagger, options) {
       properties = (model.allOf.find(val => !!val.properties) || {}).properties || {};
       requiredProperties = (model.allOf.find(val => !!val.required) || {}).required || [];
       enumValues = model.enum || [];
-      if (enumValues.length == 0) {
+      if (parents && parents.length) {
+        simpleType = null;
+        enumValues = null;
+      } else if (enumValues.length == 0) {
         simpleType = 'string';
         enumValues = null;
       } else {
@@ -711,9 +714,9 @@ function processModels(swagger, options) {
     }
 
     // Process the hierarchy
-    var parentNames = model.modelParents;
-    if (parentNames && parentNames.length > 0) {
-      model.modelParents = parentNames
+    var parents = model.modelParents;
+    if (parents && parents.length > 0) {
+      model.modelParents = parents
         .filter(parentName => !!parentName)
         .map(parentName => {
         // Make the parent be the actual model, not the name
@@ -722,8 +725,13 @@ function processModels(swagger, options) {
         // Append this model on the parent's subclasses
         parentModel.modelSubclasses.push(model);
         return parentModel;
-      });
-      model.modelParents[0].parentIsFirst = true;
+        });
+      model.modelParentNames = model.modelParents.map(
+        (parent, index) => ({
+          modelClass: parent.modelClass,
+          parentIsFirst: index === 0,
+        })
+      );
     }
   }
 

@@ -627,11 +627,13 @@ function processModels(swagger, options) {
         .map(parent => simpleRef(parent.$ref));
       properties = (model.allOf.find(val => !!val.properties) || {}).properties || {};
       requiredProperties = (model.allOf.find(val => !!val.required) || {}).required || [];
-      enumValues = model.enum || [];
       if (parents && parents.length) {
-        simpleType = null;
-        enumValues = null;
-      } else if (enumValues.length == 0) {
+          simpleType = null;
+          enumValues = null;
+      }
+    } else if (model.type === 'string') {
+      enumValues = model.enum || [];
+      if (enumValues.length == 0) {
         simpleType = 'string';
         enumValues = null;
       } else {

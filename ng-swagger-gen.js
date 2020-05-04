@@ -30,9 +30,11 @@ function ngSwaggerGen(options) {
       console.error(
         `Error reading swagger location ${options.swagger}: ${err}`
       );
+      process.exit(1);
     }
   ).catch(function (error) {
     console.error(`Error: ${error}`);
+    process.exit(1);
   });
 }
 

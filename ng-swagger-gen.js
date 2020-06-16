@@ -880,6 +880,9 @@ function propertyType(property) {
       else if (property.const) {
         return '\'' + property.const + '\'';
       }
+      else if (property.format === 'byte') {
+        return 'ArrayBuffer';
+      }
       return 'string';
     case 'array':
       if (Array.isArray(property.items)) { // support for tuples
@@ -1309,8 +1312,10 @@ function processServices(swagger, models, options) {
         !modelResult && (resultType.toString().includes('Array<') ||
           resultType.toString().includes('[]'));
       operation.operationIsFile = actualType === 'Blob';
+      operation.operationIsByteArray = actualType === 'ArrayBuffer';
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
+        operation.operationIsByteArray ? 'arraybuffer' :
         operation.operationIsVoid ||
         operation.operationIsString ||
         operation.operationIsNumber ||

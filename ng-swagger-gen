@@ -71,6 +71,14 @@ argParser.addArgument(
     dest: "timeout"
   }
 );
+argParser.addArgument(
+  ["--skip-proxy-setup"],
+  {
+    help: "Skip the proxy setup when unable to generate from localhost.",
+    action: "storeTrue",
+    dest: "skipProxySetup"
+  }
+);
 var args = argParser.parseArgs();
 
 var config = args.config;
@@ -98,6 +106,9 @@ if (args.genConfig) {
     }
     if (args.timeout) {
       options.timeout = args.timeout;
+    }
+    if (args.skipProxySetup) {
+      options.skipProxySetup = args.skipProxySetup;
     }
     run(options);
   } else if (args.swagger) {
@@ -169,6 +180,9 @@ function run(options) {
   }
   if (options.timeout == null) {
     options.timeout = schema.properties.timeout.default;
+  }
+  if (options.skipProxySetup == null) {
+    options.skipProxySetup = schema.properties.skipProxySetup.default;
   }
   ngSwaggerGen(options);
 }

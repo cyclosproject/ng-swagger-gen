@@ -127,6 +127,11 @@
       "description": "The amount of time (in milliseconds) to wait for a response from the server when downloading files. The default is 20 seconds.",
       "type": "number",
       "default": 20000
+    },
+    "skipProxySetup": {
+      "description": "Skip the proxy setup when unable to generate from localhost.",
+      "type": "boolean",
+      "default": "false"
     }
   }
 }

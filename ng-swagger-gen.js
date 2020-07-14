@@ -18,7 +18,9 @@ function ngSwaggerGen(options) {
     process.exit(1);
   }
 
-  setupProxy();
+  if (!options.skipProxySetup) {
+    setupProxy();
+  }
 
   $RefParser.bundle(options.swagger,
     { dereference: { circular: false },

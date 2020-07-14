@@ -249,6 +249,7 @@ The supported properties in the JSON file are:
 - `customFileSuffix`: Set custom suffixes for generated files.
 - `timeout`: Set the amount of time (in milliseconds) to wait for a response
 from the server when downloading files. Default to 20 seconds.
+- `skipProxySetup`: Skip the proxy setup when unable to generate from localhost.
 
 ### Configuration file example
 The following is an example of a configuration file which will choose a few
@@ -449,7 +450,9 @@ equivalents) to use an array of models.
 ## Who uses this project
 This project was developed by the [Cyclos](http://cyclos.org) development team,
 and, in fact, the [Cyclos REST API](https://demo.cyclos.org/api) is the primary
-test case for generated classes.
+test case for generated classes. However, since Cyclos 4.12, the project has 
+changed the API descriptor to OpenAPI 3. As such, a new generator was developed:
+[ng-openapi-gen](https://github.com/cyclosproject/ng-openapi-gen).
 
 That doesn't mean that the generator works only for the Cyclos API. For
 instance, the following commands will generate an API client for

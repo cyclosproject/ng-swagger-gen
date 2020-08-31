@@ -28,6 +28,7 @@
         }}{{#operationIsNumber}}return (_r as HttpResponse<any>).clone({ body: parseFloat((_r as HttpResponse<any>).body as string) }) as {{{operationHttpResponseType}}}{{/operationIsNumber
         }}{{#operationIsBoolean}}return (_r as HttpResponse<any>).clone({ body: (_r as HttpResponse<any>).body === 'true' }) as {{{operationHttpResponseType}}}{{/operationIsBoolean
         }}{{#operationIsOther}}return _r as {{{operationHttpResponseType}}};{{/operationIsOther}}
-      })
-    );
+      }
+    ),
+    __first());
   }

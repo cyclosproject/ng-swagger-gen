@@ -7,6 +7,16 @@ clients from a [Swagger 2.0](http://swagger.io/)
 The generated classes follow the principles of
 [Angular](https://angular.io/).
 
+
+**NOTICE**: This project isn't actively maintained anymore.
+Since 2019 our development focus has shifted to [ng-openapi-gen](https://github.com/cyclosproject/ng-openapi-gen),
+and the Cyclos project, which maintains both projects has long ago moved to OpenAPI 3.
+As such, the maintainance of `ng-swagger-gen` is basically done by the community, via pull requests.
+However, as `ng-swagger-gen` has no automated tests, accepting PR's for new features is also challenging,
+because the original maintainers have no practical way to test if anything else is broken.
+As such, only important bug fixes will be accepted.
+
+
 Angular / RxJS version compatibility:
 
 - Starting with version `2.0.0`, Angular 7+ is required.

@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const Mustache = require('mustache');
-const $RefParser = require('json-schema-ref-parser');
+const $RefParser = require('@apidevtools/swagger-parser');
 var npmConfig = require('npm-conf');
 
 /**
@@ -22,22 +22,23 @@ function ngSwaggerGen(options) {
     setupProxy();
   }
 
-  $RefParser.bundle(options.swagger,
-    { dereference: { circular: false },
-    resolve: { http: { timeout: options.timeout } } }).then(
-    data => {
-      doGenerate(data, options);
-    },
-    err => {
-      console.error(
-        `Error reading swagger location ${options.swagger}: ${err}`
-      );
+  $RefParser.dereference(options.swagger,
+    { dereference: { circular: false},
+    resolve: { http: { timeout: options.timeout } } })
+    .then(
+      data => {
+        doGenerate(data, options);
+      },
+      err => {
+        console.error(
+          `Error reading swagger location ${options.swagger}: ${err}`
+        );
+      })
+    .catch(function (error) {
+      console.error(`Error while dereferening: ${error}`);
       process.exit(1);
-    }
-  ).catch(function (error) {
-    console.error(`Error: ${error}`);
-    process.exit(1);
-  });
+    });
+
 }
 
 /**

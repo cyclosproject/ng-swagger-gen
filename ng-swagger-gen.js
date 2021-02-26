@@ -23,21 +23,23 @@ function ngSwaggerGen(options) {
   }
 
   $RefParser.bundle(options.swagger,
-    { dereference: { circular: false },
-    resolve: { http: { timeout: options.timeout } } }).then(
-    data => {
-      doGenerate(data, options);
-    },
-    err => {
-      console.error(
-        `Error reading swagger location ${options.swagger}: ${err}`
-      );
+    {
+      dereference: { circular: false },
+      resolve: { http: { timeout: options.timeout } }
+    }).then(
+      data => {
+        doGenerate(data, options);
+      },
+      err => {
+        console.error(
+          `Error reading swagger location ${options.swagger}: ${err}`
+        );
+        process.exit(1);
+      }
+    ).catch(function (error) {
+      console.error(`Error: ${error}`);
       process.exit(1);
-    }
-  ).catch(function (error) {
-    console.error(`Error: ${error}`);
-    process.exit(1);
-  });
+    });
 }
 
 /**
@@ -121,7 +123,7 @@ function doGenerate(swagger, options) {
   if (swagger.swagger !== '2.0') {
     console.error(
       'Invalid swagger specification. Must be a 2.0. Currently ' +
-        swagger.swagger
+      swagger.swagger
     );
     process.exit(1);
   }
@@ -145,7 +147,7 @@ function doGenerate(swagger, options) {
   // Read the templates
   var templates = {};
   var files = fs.readdirSync(options.templates);
-  files.forEach(function(file, index) {
+  files.forEach(function (file, index) {
     var pos = file.indexOf('.mustache');
     if (pos >= 0) {
       var fullFile = path.join(options.templates, file);
@@ -157,14 +159,14 @@ function doGenerate(swagger, options) {
   var fallbackTemplates = path.join(__dirname, 'templates');
   fs.readdirSync(fallbackTemplates)
     .forEach(function (file) {
-    var pos = file.indexOf('.mustache');
-    if (pos >= 0) {
-      var fullFile = path.join(fallbackTemplates, file);
-      if (!(file.substr(0, pos) in templates)) {
-        templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
+      var pos = file.indexOf('.mustache');
+      if (pos >= 0) {
+        var fullFile = path.join(fallbackTemplates, file);
+        if (!(file.substr(0, pos) in templates)) {
+          templates[file.substr(0, pos)] = fs.readFileSync(fullFile, 'utf-8');
+        }
       }
-    }
-  });
+    });
 
   // Prepare the output folder
   const modelsOutput = path.join(output, 'models');
@@ -176,7 +178,7 @@ function doGenerate(swagger, options) {
   var generateEnumModule = options.enumModule !== false;
 
   // Utility function to render a template and write it to a file
-  var generate = function(template, model, file) {
+  var generate = function (template, model, file) {
     var code = Mustache.render(template, model, templates)
       .replace(/[^\S\r\n]+$/gm, '');
     fs.writeFileSync(file, code, 'UTF-8');
@@ -248,7 +250,7 @@ function doGenerate(swagger, options) {
         var model = models[normalizeModelName(modelName)];
         if (basename == model.modelFile + '.ts'
           || basename == model.modelExampleFile + '.ts'
-            && model.modelExampleStr != null) {
+          && model.modelExampleStr != null) {
           ok = true;
           break;
         }
@@ -318,8 +320,8 @@ function doGenerate(swagger, options) {
   var fullModuleFile = path.join(output, moduleFile + '.ts');
   if (options.apiModule !== false) {
     generate(templates.module, applyGlobals({
-        services: servicesArray
-      }),
+      services: servicesArray
+    }),
       fullModuleFile);
   } else if (removeStaleFiles) {
     rmIfExists(fullModuleFile);
@@ -339,8 +341,8 @@ function doGenerate(swagger, options) {
     }
 
     generate(templates.configuration, applyGlobals({
-        rootUrl: rootUrl,
-      }),
+      rootUrl: rootUrl,
+    }),
       path.join(output, configurationFile + '.ts')
     );
   }
@@ -416,8 +418,8 @@ function applyTagFilter(models, services, options) {
         // This model is not used - remove it
         console.info(
           'Ignoring model ' +
-            modelName +
-            ' because it was not used by any service'
+          modelName +
+          ' because it was not used by any service'
         );
         delete models[normalizeModelName(modelName)];
       }
@@ -583,7 +585,7 @@ function DependenciesResolver(models, ownType) {
 /**
  * Adds a candidate dependency
  */
-DependenciesResolver.prototype.add = function(input) {
+DependenciesResolver.prototype.add = function (input) {
   let deps;
   if (input.allTypes) {
     deps = input.allTypes;
@@ -604,7 +606,7 @@ DependenciesResolver.prototype.add = function(input) {
 /**
  * Returns the resolved dependencies as a list of models
  */
-DependenciesResolver.prototype.get = function() {
+DependenciesResolver.prototype.get = function () {
   return this.dependencies;
 };
 
@@ -632,8 +634,8 @@ function processModels(swagger, options) {
       properties = (model.allOf.find(val => !!val.properties) || {}).properties || {};
       requiredProperties = (model.allOf.find(val => !!val.required) || {}).required || [];
       if (parents && parents.length) {
-          simpleType = null;
-          enumValues = null;
+        simpleType = null;
+        enumValues = null;
       }
     } else if (model.type === 'string') {
       enumValues = model.enum || [];
@@ -664,7 +666,7 @@ function processModels(swagger, options) {
       properties = model.properties || {};
       requiredProperties = model.required || [];
       additionalPropertiesType = model.additionalProperties &&
-          (typeof model.additionalProperties === 'object' ? propertyType(model.additionalProperties) : 'any');
+        (typeof model.additionalProperties === 'object' ? propertyType(model.additionalProperties) : 'any');
     } else {
       simpleType = propertyType(model);
     }
@@ -725,12 +727,12 @@ function processModels(swagger, options) {
       model.modelParents = parents
         .filter(parentName => !!parentName)
         .map(parentName => {
-        // Make the parent be the actual model, not the name
-        var parentModel =  models[normalizeModelName(parentName)];
+          // Make the parent be the actual model, not the name
+          var parentModel = models[normalizeModelName(parentName)];
 
-        // Append this model on the parent's subclasses
-        parentModel.modelSubclasses.push(model);
-        return parentModel;
+          // Append this model on the parent's subclasses
+          parentModel.modelSubclasses.push(model);
+          return parentModel;
         });
       model.modelParentNames = model.modelParents.map(
         (parent, index) => ({
@@ -790,7 +792,7 @@ function processModels(swagger, options) {
  * A special case is for inline objects. In this case, the result is "object".
  */
 function removeBrackets(type, nullOrUndefinedOnly) {
-  if(typeof nullOrUndefinedOnly === "undefined") {
+  if (typeof nullOrUndefinedOnly === "undefined") {
     nullOrUndefinedOnly = false;
   }
   if (typeof type === 'object') {
@@ -799,13 +801,13 @@ function removeBrackets(type, nullOrUndefinedOnly) {
     }
     return 'object';
   }
-  else if(type.replace(/ /g, '') !== type) {
+  else if (type.replace(/ /g, '') !== type) {
     return removeBrackets(type.replace(/ /g, ''));
   }
-  else if(type.indexOf('null|') === 0) {
+  else if (type.indexOf('null|') === 0) {
     return removeBrackets(type.substr('null|'.length));
   }
-  else if(type.indexOf('undefined|') === 0) {
+  else if (type.indexOf('undefined|') === 0) {
     // Not used currently, but robust code is better code :)
     return removeBrackets(type.substr('undefined|'.length));
   }
@@ -852,7 +854,7 @@ function propertyType(property) {
     return type.length == 0 ? 'null' : type;
   } else if (property['x-nullable']) {
     return 'null | ' + propertyType(
-      Object.assign(property, {'x-nullable': undefined}));
+      Object.assign(property, { 'x-nullable': undefined }));
   } else if (!property.type && (property.anyOf || property.oneOf)) {
     let variants = (property.anyOf || property.oneOf).map(propertyType);
     return {
@@ -868,7 +870,7 @@ function propertyType(property) {
       toString: () => variants.join(' & ')
     };
   } else if (Array.isArray(property.type)) {
-    let variants = property.type.map(type => propertyType(Object.assign({}, property, {type})));
+    let variants = property.type.map(type => propertyType(Object.assign({}, property, { type })));
     return {
       allTypes: mergeTypes(...variants),
       toString: () => variants.join(' | ')
@@ -892,8 +894,8 @@ function propertyType(property) {
       if (Array.isArray(property.items)) { // support for tuples
         if (!property.maxItems) return 'Array<any>'; // there is unable to define unlimited tuple in TypeScript
         let minItems = property.minItems || 0,
-            maxItems = property.maxItems,
-            types = property.items.map(propertyType);
+          maxItems = property.maxItems,
+          types = property.items.map(propertyType);
         types.push(property.additionalItems ? propertyType(property.additionalItems) : 'any');
         let variants = [];
         for (let i = minItems; i <= maxItems; i++) variants.push(types.slice(0, i));
@@ -928,15 +930,15 @@ function propertyType(property) {
           if (memberCount++) def += ', ';
           type = propertyType(prop);
           allTypes.push(type);
-	        let required = property.required && property.required.indexOf(name) >= 0;
-	        def += name + (required ? ': ' : '?: ') + type;
+          let required = property.required && property.required.indexOf(name) >= 0;
+          def += name + (required ? ': ' : '?: ') + type;
         }
       }
       if (property.additionalProperties) {
         if (memberCount++) def += ', ';
         type = typeof property.additionalProperties === 'object' ?
-            propertyType(property.additionalProperties) : 'any';
-	      allTypes.push(type);
+          propertyType(property.additionalProperties) : 'any';
+        allTypes.push(type);
         def += '[key: string]: ' + type;
       }
       def += '}';
@@ -1042,8 +1044,8 @@ function toPathExpression(operationParameters, paramsClass, path) {
     const param = operationParameters.find(p => p.paramName === pName);
     const paramName = param ? param.paramVar : pName;
     return paramsClass ?
-      "${encodeURIComponent(params." + paramName + ")}" :
-      "${encodeURIComponent(" + paramName + ")}";
+      "${encodeURIComponent(String(params." + paramName + "))}" :
+      "${encodeURIComponent(String(" + paramName + "))}";
   });
 }
 
@@ -1103,25 +1105,25 @@ function operationId(given, method, url, allKnown) {
   if (generate) {
     console.warn(
       "Operation '" +
-        method +
-        "' on '" +
-        url +
-        "' defines no operationId. Assuming '" +
-        id +
-        "'."
+      method +
+      "' on '" +
+      url +
+      "' defines no operationId. Assuming '" +
+      id +
+      "'."
     );
   } else if (duplicated) {
     console.warn(
       "Operation '" +
-        method +
-        "' on '" +
-        url +
-        "' defines a duplicated operationId: " +
-        given +
-        '. ' +
-        "Assuming '" +
-        id +
-        "'."
+      method +
+      "' on '" +
+      url +
+      "' defines a duplicated operationId: " +
+      given +
+      '. ' +
+      "Assuming '" +
+      id +
+      "'."
     );
   }
   allKnown.add(id);
@@ -1139,7 +1141,7 @@ function processServices(swagger, models, options) {
   var sortParams = options.sortParams || 'desc';
   for (var url in swagger.paths) {
     var path = swagger.paths[url];
-	  var methodParameters = path.parameters;
+    var methodParameters = path.parameters;
     for (var method in path || {}) {
       var def = path[method];
       if (!def || method == 'parameters') {
@@ -1319,13 +1321,13 @@ function processServices(swagger, models, options) {
       operation.operationIsByteArray = actualType === 'ArrayBuffer';
       operation.operationResponseType =
         operation.operationIsFile ? 'blob' :
-        operation.operationIsByteArray ? 'arraybuffer' :
-        operation.operationIsVoid ||
-        operation.operationIsString ||
-        operation.operationIsNumber ||
-        operation.operationIsBoolean ||
-        operation.operationIsEnum ?
-          'text' : 'json';
+          operation.operationIsByteArray ? 'arraybuffer' :
+            operation.operationIsVoid ||
+              operation.operationIsString ||
+              operation.operationIsNumber ||
+              operation.operationIsBoolean ||
+              operation.operationIsEnum ?
+              'text' : 'json';
       operation.operationIsUnknown = !(
         operation.operationIsVoid ||
         operation.operationIsString ||

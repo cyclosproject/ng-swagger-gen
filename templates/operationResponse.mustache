@@ -11,17 +11,21 @@
     __body = __formData;{{/operationIsMultipart}}
 {{#operationParameters}}{{>parameter}}
 {{/operationParameters}}
-    let req = new HttpRequest<any>(
-      '{{operationMethod}}',
-      this.rootUrl + `{{{operationPathExpression}}}`,
-      __body,
-      {
-        headers: __headers,
-        params: __params,
-        responseType: '{{{operationResponseType}}}'
-      });
+    return {{#tokenParameter}}this.tokenProvider('{{paramName}}'){{/tokenParameter}}{{^tokenParameter}}__of(null){{/tokenParameter}}.pipe(
+      __switchMap(_token => {
+        {{#tokenParameter}}if (_token != null) __headers = __headers.set('{{paramName}}', _token.toString());
+        {{/tokenParameter}}let req = new HttpRequest<any>(
+          '{{operationMethod}}',
+          this.rootUrl + `{{{operationPathExpression}}}`,
+          __body,
+          {
+            headers: __headers,
+            params: __params,
+            responseType: '{{{operationResponseType}}}'
+          });
 
-    return this.http.request<any>(req).pipe(
+        return this.http.request<any>(req);
+      }),
       __filter(_r => _r instanceof HttpResponse),
       __map((_r) => {
         {{#operationIsVoid}}return (_r as HttpResponse<any>).clone({ body: null }) as {{{operationHttpResponseType}}}{{/operationIsVoid

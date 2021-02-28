@@ -1169,10 +1169,19 @@ function processServices(swagger, models, options) {
         descriptor.operationIds
       );
 
+      var hasBearerAuth = !!(def.security && (def.security.filter(v => v && v.hasOwnProperty('bearer'))).length > 0);
+
       var parameters = def.parameters || [];
 
       if (methodParameters) {
         parameters = parameters.concat(methodParameters);
+      }
+
+      var tokenParameter = null;
+      if (hasBearerAuth) {
+        var tokenParameterIdx = parameters.findIndex(param => !!(param.in === 'header' && (param.name || '').match(/authorization/i)));
+        var param = parameters.splice(tokenParameterIdx, 1)[0];
+        tokenParameter = { paramName: param.name, paramIn: param.in };
       }
 
       var paramsClass = null;
@@ -1199,6 +1208,7 @@ function processServices(swagger, models, options) {
         var paramDescriptor = {
           paramName: param.name,
           paramIn: param.in,
+          paramPlaceholderVar: 'paramValue_' + paramVar,
           paramVar: paramVar,
           paramFullVar: (paramsClass == null ? '' : 'params.') + paramVar,
           paramRequired: param.required === true || param.in === 'path',
@@ -1298,6 +1308,7 @@ function processServices(swagger, models, options) {
         operationHttpResponseType: '__StrictHttpResponse<' + resultType + '>',
         operationComments: toComments(docString, 1),
         operationParameters: operationParameters,
+        tokenParameter: tokenParameter,
         operationResponses: operationResponses,
       };
       var modelResult = models[normalizeModelName(removeBrackets(resultType))];

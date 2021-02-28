@@ -1,11 +1,17 @@
 /* tslint:disable */
-import { Injectable } from '@angular/core';
+import { Injectable, InjectionToken, Optional, Inject } from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { BaseService as __BaseService } from '../base-service';
 import { {{ configurationClass }} as __Configuration } from '../{{configurationFile}}';
 import { StrictHttpResponse as __StrictHttpResponse } from '../strict-http-response';
-import { Observable as __Observable } from 'rxjs';
-import { map as __map, filter as __filter } from 'rxjs/operators';
+import { Observable as __Observable, of as __of } from 'rxjs';
+import { map as __map, filter as __filter, switchMap as __switchMap } from 'rxjs/operators';
+
+interface {{serviceClass}}TokenProvider {
+  getToken: (name: string) => __Observable<string>;
+}
+
+const {{serviceClass}}TokenProviderInjectionToken = new InjectionToken<{{serviceClass}}TokenProvider>('{{serviceClass}}TokenProviderInjectionToken')
 
 {{#serviceDependencies}}import { {{modelClass}} } from '../models/{{modelFile}}';
 {{/serviceDependencies}}
@@ -15,12 +21,19 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
 class {{serviceClass}} extends __BaseService {
 {{#serviceOperations}}{{>operationEndpoints}}{{/serviceOperations}}
 
+  private tokenProvider: (name: string) => __Observable<string> = _ => __of(null);
+
   constructor(
     config: __Configuration,
-    http: HttpClient
+    http: HttpClient,
+    @Optional() @Inject({{serviceClass}}TokenProviderInjectionToken) tokenProvider: {{serviceClass}}TokenProvider,
   ) {
     super(config, http);
+    if (tokenProvider) {
+      this.tokenProvider = (v: string) => tokenProvider.getToken(v);
+    }
   }
+
 {{#serviceOperations}}{{>operationResponse}}{{>operationBody}}{{/serviceOperations}}
 }
 
@@ -34,4 +47,4 @@ module {{serviceClass}} {
 {{/operationParamsClass}}{{/serviceOperations}}
 }
 
-export { {{serviceClass}} }
+export { {{serviceClass}}, {{serviceClass}}TokenProvider, {{serviceClass}}TokenProviderInjectionToken }

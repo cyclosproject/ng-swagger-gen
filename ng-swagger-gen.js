@@ -1252,6 +1252,9 @@ function processServices(swagger, models, options) {
           docString = summary + '\n\n' + docString;
         }
       }
+      if (def.deprecated) {
+          docString += '\n@deprecated';
+      }
       if (paramsClass == null) {
         for (i = 0; i < operationParameters.length; i++) {
           param = operationParameters[i];

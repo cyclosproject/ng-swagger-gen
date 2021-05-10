@@ -9,6 +9,6 @@
     }}{{#operationParameters}}{{paramVar}}{{^paramIsLast}}, {{/paramIsLast
     }}{{/operationParameters}}{{/operationParamsClass
     }}).pipe(
-      __map(_r => _r.body as {{{operationResultType}}})
+      __map((_r: __StrictHttpResponse<{{{operationResultType}}}>) => _r.body as {{{operationResultType}}})
     );
   }

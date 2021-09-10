@@ -235,6 +235,8 @@ The supported properties in the JSON file are:
 - `sortParams`: How to sort operation parameters. Required always come first.
   For backwards compatibility, the default value is `desc`, but `none` is
   recommended for new projects.
+- `sortModelParams`: How to sort model parameters. For backwards compatibility, 
+  the default value is 'desc', but 'none' is recommended for new projects.
 - `defaultTag`: The assumed tag for operations that don't define any.
   Defaults to `Api`.
 - `removeStaleFiles`: Indicates whether or not to remove any files in the

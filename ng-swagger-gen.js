@@ -615,6 +615,7 @@ DependenciesResolver.prototype.get = function () {
  * are simplified descriptors for models.
  */
 function processModels(swagger, options) {
+  var sortModelParams = options.sortModelParams || 'desc';
   var name, model, i, property;
   var models = {};
   for (name in swagger.definitions) {
@@ -699,8 +700,16 @@ function processModels(swagger, options) {
         descriptor.modelProperties.push(property);
       }
       descriptor.modelProperties.sort((a, b) => {
-        return a.propertyName < b.propertyName ? -1 :
-          a.propertyName > b.propertyName ? 1 : 0;
+        switch (sortModelParams) {
+          case 'asc':
+            return a.propertyName > b.propertyName ? 1 :
+              a.propertyName < b.propertyName ? -1 : 0;
+          case 'desc':
+            return a.propertyName > b.propertyName ? -1 :
+              a.propertyName < b.propertyName ? 1 : 0;
+          default:
+            return 0;
+        }
       });
       if (descriptor.modelProperties.length > 0) {
         descriptor.modelProperties[

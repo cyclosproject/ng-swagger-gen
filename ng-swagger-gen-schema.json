@@ -56,6 +56,14 @@
       ],
       "default": "desc"
     },
+    "sortModelParams": {
+      "description": "How to sort model parameters. For backwards compatibility, the default value is 'desc', but 'none' is recommended for new projects.",
+      "type": "string",
+      "enum": [
+        "none", "asc", "desc"
+      ],
+      "default": "desc"
+    },
     "defaultTag": {
       "description": "The assumed tag for operations that don't define any. Defaults to 'Api'",
       "type": "string",

@@ -905,7 +905,7 @@ function propertyType(property) {
         };
       }
       else {
-        let itemType = propertyType(property.items);
+        let itemType = propertyType(property.items||{type:'string'});
         return {
           allTypes: mergeTypes(itemType),
           toString: () => 'Array<' + itemType + '>'
